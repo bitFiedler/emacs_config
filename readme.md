@@ -140,7 +140,9 @@ By default ligatures apply to `prog-mode`, `text-mode` and `conf-mode`, includin
 | `M-x my/ligatures-use-full-set` | Restore the full set, enable ligatures and their light-gray/bold styling |
 | `M-x my/apply-ligatures` | Reapply settings and refresh existing buffers; also used at startup |
 
-Validation: seven ERT checks cover inherited-mode selection, repeat application and selector changes, on/off behavior, unchanged buffer text/modified state, light-gray/bold syntax overrides, removal on disable, fontification after edits, display-only arrow spacing, gap removal after edits/toggles, and disabling the gap. The checks validate configuration; graphical glyph appearance requires viewing it in a GUI frame.
+Validation: nine ERT checks cover inherited-mode selection, repeat application and selector changes, on/off behavior, unchanged buffer text/modified state, light-gray/bold syntax overrides, removal on disable, fontification after edits, display-only arrow spacing, gap removal after edits/toggles, disabling the gap, precedence over a later Eglot semantic operator face, and preserving expanded fontifier bounds/return values. The checks validate configuration; graphical glyph appearance requires viewing it in a GUI frame.
+
+Eglot in Emacs 31 can prepend `eglot-semantic-operator` after ordinary font-lock keywords; that face inherits `font-lock-function-name-face` and can make an operator blue. The personal module applies its final ligature face and arrow gap through a buffer-local wrapper after the normal fontifier completes. This preserves syntax and semantic faces underneath, leaves semantic highlighting enabled, and restores their precedence when ligatures are disabled. No Eglot internals or global operator faces are changed. The Eglot message “Swap operands to !=” is a code-action/refactoring suggestion, separate from operator coloring. The source expression `rc != 0` is not changed by this display fix.
 
 For the current Emacs session, the existing local checkout needs no package installation. Evaluate:
 

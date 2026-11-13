@@ -6,6 +6,8 @@
     (when (file-readable-p (expand-file-name "ligature.el" checkout))
       (add-to-list 'load-path checkout))))
 (require 'ligature)
+(require 'font-lock)
+(require 'font-lock)
 
 (defgroup my/ligatures nil
   "Display ligatures with the configured editing font."
@@ -74,39 +76,72 @@ is intended for graphical Emacs; terminals may round its width."
   nil)
 
 (defvar-local my/ligatures--font-lock-keywords nil
-  "Font-lock rules currently installed by this module.")
+  "Legacy keyword rules to remove when reloading an older module version.")
+
+(defvar-local my/ligatures--style-regexp nil
+  "Regexp of configured sequences to style after syntax and semantic faces.")
+
+(defun my/ligatures--fontify-after (original start end &optional loudly)
+  "Run ORIGINAL, then style ligatures after all syntax/semantic fontification.
+Preserve ORIGINAL's return value and expanded jit-lock bounds. This local
+wrapper keeps Eglot's later semantic operator face from taking precedence."
+  (let* ((result (funcall original start end loudly))
+         (bounds (and (consp result) (eq (car result) 'jit-lock-bounds) result))
+         (begin (max (point-min) (if bounds (nth 1 bounds) start)))
+         (finish (min (point-max) (if bounds (cddr bounds) end))))
+    (save-excursion
+      (save-match-data
+        (with-silent-modifications
+          (when my/ligatures--style-regexp
+            (goto-char begin)
+            (while (re-search-forward my/ligatures--style-regexp finish t)
+              (add-face-text-property (match-beginning 0) (match-end 0)
+                                      'my/ligature-symbol)))
+          (when my/ligatures--arrow-regexp
+            (goto-char begin)
+            (my/ligatures--space-matcher finish)))))
+    result))
 
 (defun my/ligatures--sync-style ()
-  "Refresh this buffer's ligature face and display-only arrow spacing."
+  "Refresh this buffer's final ligature styling and display-only arrow spacing."
+  (remove-function (local 'font-lock-fontify-region-function)
+                   #'my/ligatures--fontify-after)
   (when my/ligatures--font-lock-keywords
     (font-lock-remove-keywords nil my/ligatures--font-lock-keywords)
     (setq my/ligatures--font-lock-keywords nil))
-  (remove-overlays (point-min) (point-max) 'my/ligature-gap t)
-  (setq my/ligatures--arrow-regexp nil)
+  (save-restriction
+    (widen)
+    (remove-overlays (point-min) (point-max) 'my/ligature-gap t))
+  (setq my/ligatures--arrow-regexp nil
+        my/ligatures--style-regexp nil)
   (when (and ligature-mode my/ligature-sequences
              (or (eq my/ligature-modes t)
                  (apply #'derived-mode-p my/ligature-modes)))
     (when my/ligatures-highlight
-      (push `(,(regexp-opt my/ligature-sequences) (0 'my/ligature-symbol prepend))
-            my/ligatures--font-lock-keywords))
+      (setq my/ligatures--style-regexp (regexp-opt my/ligature-sequences)))
     (when (> my/ligature-arrow-gap 0)
       (let ((arrows (delq nil (mapcar (lambda (arrow)
                                        (and (member arrow my/ligature-sequences) arrow))
                                      '("->" "->>" "<-" "<->" "=>" "<=>")))))
         (when arrows
           (setq my/ligatures--arrow-regexp
-                (concat (regexp-opt arrows) "\\(\\sw\\|\\s_\\)"))
-          (push '(my/ligatures--space-matcher (0 nil))
-                my/ligatures--font-lock-keywords))))
-    (when my/ligatures--font-lock-keywords
-      (font-lock-add-keywords nil (reverse my/ligatures--font-lock-keywords) 'append)))
+                (concat (regexp-opt arrows) "\\(\\sw\\|\\s_\\)")))))
+    (when (or my/ligatures--style-regexp my/ligatures--arrow-regexp)
+      (font-lock-set-defaults)
+      (add-function :around (local 'font-lock-fontify-region-function)
+                    #'my/ligatures--fontify-after)))
   (when font-lock-mode
     (font-lock-flush)))
 
 (defun my/ligatures--font-lock-state ()
-  "Remove display gaps when font-lock is disabled."
-  (unless font-lock-mode
-    (remove-overlays (point-min) (point-max) 'my/ligature-gap t)))
+  "Refresh local integration after font-lock toggles."
+  (if font-lock-mode
+      (my/ligatures--sync-style)
+    (remove-function (local 'font-lock-fontify-region-function)
+                     #'my/ligatures--fontify-after)
+    (save-restriction
+      (widen)
+      (remove-overlays (point-min) (point-max) 'my/ligature-gap t))))
 
 (add-hook 'font-lock-mode-hook #'my/ligatures--font-lock-state)
 

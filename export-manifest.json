@@ -224,13 +224,13 @@
   {
     "source": "emacstools/my-ligatures.el",
     "destination": "emacstools/my-ligatures.el",
-    "source_sha256": "9a98cd382222d6efa91a143f574e4e0d96a7bad4be6b6fe59967926b5b82dd68",
-    "export_sha256": "9a98cd382222d6efa91a143f574e4e0d96a7bad4be6b6fe59967926b5b82dd68"
+    "source_sha256": "2cf0f57543b49fb1fcd77925af0c3f83c0399570952bbd2027953a731b3fe017",
+    "export_sha256": "2cf0f57543b49fb1fcd77925af0c3f83c0399570952bbd2027953a731b3fe017"
   },
   {
     "source": "emacstools/my-ligatures-tests.el",
     "destination": "emacstools/my-ligatures-tests.el",
-    "source_sha256": "548904373b06d5f467d02ddd679ee8803e413118070124395fe82566e187086f",
-    "export_sha256": "548904373b06d5f467d02ddd679ee8803e413118070124395fe82566e187086f"
+    "source_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393",
+    "export_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393"
   }
 ]
