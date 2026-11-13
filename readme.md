@@ -15,6 +15,7 @@ Terminal Emacs uses the terminal's font. `my-device-font.el` selects graphical s
 
 ## Repository layout and installation
 
+- [AGENTS.md](AGENTS.md): agent workflow rules and personal preferences.
 - `.emacs` and `.emacs.d/{early-init,custom}.el`: home-directory configuration.
 - `emacstools/`: personal modules, integration settings, tests and Markdown assets.
 - `install.py`: backup-aware configuration link installer and recovery tool.
