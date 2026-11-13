@@ -2,8 +2,8 @@
   {
     "source": ".emacs",
     "destination": ".emacs",
-    "source_sha256": "fd3fd89af97535f79213f267b2a906a8c8ab46d9308f117fda1bf64dfeebe27c",
-    "export_sha256": "1a35c2801c6c2395826771f4310f22a96419a647d7595673db439a086114faa3"
+    "source_sha256": "a249f7104333cb11261e4c1fe86ad89f9ac7a13e5114d3a4b1dcc73fefe84533",
+    "export_sha256": "ffee867a98bd55afb44907439aa6e2312c90541c1196ebe549a83a21cd546d3b"
   },
   {
     "source": ".emacs.d/custom.el",
@@ -220,5 +220,17 @@
     "destination": "emacstools/python_config.el",
     "source_sha256": "fcc6ad72dea39ab76c7e69ac7a4ebce1ca980a6907942bad0f91355dd7a2a53b",
     "export_sha256": "fcc6ad72dea39ab76c7e69ac7a4ebce1ca980a6907942bad0f91355dd7a2a53b"
+  },
+  {
+    "source": "emacstools/my-ligatures.el",
+    "destination": "emacstools/my-ligatures.el",
+    "source_sha256": "9a98cd382222d6efa91a143f574e4e0d96a7bad4be6b6fe59967926b5b82dd68",
+    "export_sha256": "9a98cd382222d6efa91a143f574e4e0d96a7bad4be6b6fe59967926b5b82dd68"
+  },
+  {
+    "source": "emacstools/my-ligatures-tests.el",
+    "destination": "emacstools/my-ligatures-tests.el",
+    "source_sha256": "548904373b06d5f467d02ddd679ee8803e413118070124395fe82566e187086f",
+    "export_sha256": "548904373b06d5f467d02ddd679ee8803e413118070124395fe82566e187086f"
   }
 ]

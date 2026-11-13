@@ -514,6 +514,17 @@ This follows existing frame alpha; it does not change frame opacity."
 (use-package all-the-icons
   :ensure t)
 
+;; Use the installed library or existing upstream checkout without downloading.
+;; On a new machine, fetch directly from Git rather than depending on archive metadata.
+(if (or (locate-library "ligature")
+        (file-readable-p (expand-file-name "~/emacstools/ligature.el/ligature.el")))
+    (load-file "~/emacstools/my-ligatures.el")
+  (use-package ligature
+    :ensure nil
+    :quelpa (ligature :fetcher github :repo "mickeynp/ligature.el")
+    :config
+    (load-file "~/emacstools/my-ligatures.el")))
+
 (use-package nerd-icons
   :ensure t)
 

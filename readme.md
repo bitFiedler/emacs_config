@@ -68,6 +68,47 @@ For Windows-hosted WSL terminals, also install the bundled TTFs **on Windows**, 
 
 Bundling the fonts makes Emacs and the custom HTML preview easier to set up; GitHub's README viewer still cannot load a custom font from Markdown. Use icon images for guaranteed GitHub display.
 
+## Ligatures in graphical Emacs
+
+The personal `emacstools/my-ligatures.el` module configures the external [ligature package](https://github.com/mickeynp/ligature.el), loaded from an installed library or the existing `~/emacstools/ligature.el` checkout. If neither exists, the init installs it through the explicit Quelpa Git recipe `mickeynp/ligature.el`. The upstream package is not vendored. The personal module automatically adds the existing checkout to `load-path` when no installed library is available.
+
+The Emacs 31.1.50 build includes HarfBuzz, and bundled **JetBrains Mono** supports programming ligatures. The separate **JetBrains Mono NL** family means “no ligatures”; a face explicitly selecting that family, such as the existing Vundo UI face, does not gain programming ligatures. Nerd Font icons are independent of ligatures.
+
+By default ligatures apply to `prog-mode`, `text-mode` and `conf-mode`, including derived modes such as C/C++, Python, Org and Markdown. The full ligature set is enabled, including arrows, comparisons, logical operators and punctuation combinations. Configured sequences use light gray (`#D0D0D0`) and bold through the `my/ligature-symbol` face, overriding syntax foreground/weight while retaining the existing font family and background. A small display-only gap separates arrows from immediately following word characters (`->r`, `=>value`, etc.). Existing whitespace is preserved without adding a second gap. The actual characters, cursor positions, search, copying and file contents remain unchanged. These rules do not replace Emacs/GTK menus, title bars or buttons, and do not promise shaping of mode-line/header-line strings. Terminal rendering depends on the terminal's font and shaping support.
+
+| Setting or command | Purpose |
+| --- | --- |
+| `M-x ligature-mode` | Toggle ligatures in the current buffer |
+| `M-x global-ligature-mode` | Toggle the upstream global mode |
+| `my/ligatures-enabled` | Default `t`; set nil and apply to disable globally |
+| `my/ligature-modes` | Default `(prog-mode text-mode conf-mode)`; set `t` to include all major modes, including UI buffers |
+| `my/ligature-sequences` | Full default set from `my/ligature-default-sequences`; customize the combinations offered to the font |
+| `my/ligature-arrow-gap` | Default `0.2` character widths; display-only gap between an arrow and an immediately following word, such as `->r`; `0` disables it |
+| `my/ligatures-highlight` | Default `t`; enable light-gray/bold styling of configured sequences |
+| `my/ligature-symbol` | Customize this face to change light-gray/bold appearance independently of syntax faces |
+| `M-x my/ligatures-use-full-set` | Restore the full set, enable ligatures and their light-gray/bold styling |
+| `M-x my/apply-ligatures` | Reapply settings and refresh existing buffers; also used at startup |
+
+Validation: seven ERT checks cover inherited-mode selection, repeat application and selector changes, on/off behavior, unchanged buffer text/modified state, light-gray/bold syntax overrides, removal on disable, fontification after edits, display-only arrow spacing, gap removal after edits/toggles, and disabling the gap. The checks validate configuration; graphical glyph appearance requires viewing it in a GUI frame.
+
+For the current Emacs session, the existing local checkout needs no package installation. Evaluate:
+
+```elisp
+(load-file "~/emacstools/my-ligatures.el")
+```
+
+If `package-install` says “package not found”, the current archive metadata may not include the package; `M-x package-refresh-contents` can refresh that list, but the local checkout needs no archive access. On another device without the checkout or installed package, restart with the updated init to use its explicit Quelpa Git recipe (network access required). To disable persistently, set `my/ligatures-enabled` to nil through Customize and run `my/apply-ligatures`.
+
+To restore the full set and apply its light-gray/bold style in an active session, evaluate:
+
+```elisp
+(progn
+  (load-file "~/emacstools/my-ligatures.el")
+  (my/ligatures-use-full-set))
+```
+
+Use `M-x customize-group RET my/ligatures RET` to choose combinations, adjust `my/ligature-arrow-gap` or save preferences. Fractional gap widths are intended for graphical Emacs; terminals may round them. `M-x customize-face RET my/ligature-symbol RET` changes the symbol styling. Styling follows configured character sequences, including inside strings/comments, and requires font-lock; it does not detect whether a particular font actually supplies a shaped glyph. Disabling `ligature-mode` removes the additional style. A face choosing JetBrains Mono NL will display the characters separately regardless of this list.
+
 ## Nerd Font symbols: installation and rendering problems
 
 Nerd Font icons are characters in Unicode's Private Use Areas. Their appearance depends on a compatible font; a square, empty box or incorrect symbol usually means that the viewer has no matching glyph or uses an incompatible font version. Installing the Emacs `nerd-icons` package supplies icon names and lookup code, and the corresponding font must also be installed. See the [upstream nerd-icons installation instructions](https://github.com/rainstormstudio/nerd-icons.el#installing-fonts).
