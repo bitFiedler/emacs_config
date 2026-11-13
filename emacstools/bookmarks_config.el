@@ -20,6 +20,8 @@
 
 (require 'hl-line)
 (require 'color)
+(require 'cl-lib)
+(require 'term/tty-colors)
 
 (defcustom my/bookmark-orange "DarkOrange1"
   "Original bookmark orange, used for the ribbon and line tint."
@@ -31,30 +33,125 @@ opacity remains the same frame alpha used by hl-line.  After changing
 this value, run `my/bookmarks-refresh-appearance'."
   :type 'float :group 'bm)
 
+(defcustom my/bookmark-terminal-markers t
+  "Show a left-margin ribbon in terminal windows containing bookmarks."
+  :type 'boolean :group 'bm)
+(defcustom my/bookmark-terminal-symbol ""
+  "Terminal bookmark ribbon (nf-fa-bookmark). The terminal needs a Nerd Font.
+Use a simple character such as B if the terminal lacks that font."
+  :type 'string :group 'bm)
+(defcustom my/bookmark-terminal-low-color "yellow"
+  "Bookmark fallback color for terminals with fewer than 256 colors."
+  :type 'color :group 'bm)
+(defface my/bookmark-terminal-marker
+  '((t (:foreground "#FF7F00" :weight bold)))
+  "Terminal ribbon with the same orange as the graphical bookmark."
+  :group 'bm)
+
+(defun my/bookmarks-color-rgb (name &optional frame)
+  "Resolve NAME before terminal palette approximation, optionally on FRAME."
+  (when (stringp name)
+    (let ((standard (tty-color-standard-values (downcase name))))
+      (if standard
+          (mapcar (lambda (value) (/ value 65535.0)) standard)
+        (color-name-to-rgb name (and (framep frame) frame))))))
+
 (defun my/bookmarks-line-background (frame)
   "Return a subtle orange tint over FRAME's hl-line background."
-  (let* ((base (or (color-name-to-rgb (or (face-background hl-line-face frame t) ""))
-                   (color-name-to-rgb (or (face-background 'default frame t) ""))
+  (let* ((base (or (my/bookmarks-color-rgb (face-background hl-line-face frame t) frame)
+                   (my/bookmarks-color-rgb (face-background 'default frame t) frame)
                    '(0.0 0.0 0.0)))
-         (orange (or (color-name-to-rgb my/bookmark-orange) '(1.0 0.5 0.0)))
+         (orange (or (my/bookmarks-color-rgb my/bookmark-orange frame) '(1.0 0.5 0.0)))
          (amount (max 0.0 (min 1.0 my/bookmark-line-tint))))
     (apply #'color-rgb-to-hex
            (append (cl-mapcar (lambda (a b) (+ (* amount a) (* (- 1 amount) b)))
                               orange base)
                    '(2)))))
 
+(defvar my/bookmarks--terminal-overlays nil
+  "Window-specific terminal ribbons owned by this configuration.")
+(defvar my/bookmarks--refreshing nil
+  "Guard against recursive window changes during marker refresh.")
+
+(defun my/bookmarks--terminal-margin (window active width)
+  "Reserve WIDTH columns for an ACTIVE marker on WINDOW, or restore its margin."
+  (let* ((saved (window-parameter window 'my/bookmark-original-margins))
+         (installed (window-parameter window 'my/bookmark-installed-margins))
+         (current (window-margins window)))
+    (if active
+        (let* ((original (if (and saved (equal current installed)) (cdr saved) current))
+               (desired (cons (+ (or (car original) 0) width) (cdr original))))
+          (set-window-parameter window 'my/bookmark-original-margins (cons t original))
+          (set-window-parameter window 'my/bookmark-installed-margins desired)
+          (unless (equal current desired)
+            (set-window-margins window (car desired) (cdr desired))))
+      (when saved
+        (when (equal current installed)
+          (set-window-margins window (cadr saved) (cddr saved)))
+        (set-window-parameter window 'my/bookmark-original-margins nil)
+        (set-window-parameter window 'my/bookmark-installed-margins nil)))))
+
+(defun my/bookmarks-refresh-terminal-markers (&rest _)
+  "Refresh window-specific terminal ribbons while preserving existing margins."
+  (unless my/bookmarks--refreshing
+    (let ((my/bookmarks--refreshing t))
+      (mapc #'delete-overlay my/bookmarks--terminal-overlays)
+      (setq my/bookmarks--terminal-overlays nil)
+      (dolist (frame (frame-list))
+        (dolist (window (window-list frame 'no-minibuffer))
+          (let ((bookmarks
+                 (when (and my/bookmark-terminal-markers
+                            (not (display-graphic-p frame)))
+                   (with-current-buffer (window-buffer window)
+                     (save-restriction
+                       (widen)
+                       (let ((lists (bm-lists))) (append (car lists) (cdr lists))))))))
+            (my/bookmarks--terminal-margin window bookmarks
+                                           (max 2 (1+ (string-width my/bookmark-terminal-symbol))))
+            (dolist (bookmark bookmarks)
+              (let* ((marker (make-overlay (overlay-start bookmark) (overlay-end bookmark)
+                                            (overlay-buffer bookmark)))
+                     (icon (propertize my/bookmark-terminal-symbol
+                                       'face 'my/bookmark-terminal-marker)))
+                (overlay-put marker 'window window)
+                (overlay-put marker 'my/bookmark-terminal t)
+                (overlay-put marker 'before-string
+                             (propertize " " 'display `((margin left-margin) ,icon)))
+                (push marker my/bookmarks--terminal-overlays)))))))))
+
+(defun my/bookmarks--after-edit (_overlay after &rest _)
+  "Follow the bookmark after its upstream edit hook adjusts its bounds."
+  (when after (my/bookmarks-refresh-terminal-markers)))
+
+(dolist (function '(bm-bookmark-add bm-bookmark-remove bm-redraw-bookmarks))
+  (unless (advice-member-p #'my/bookmarks-refresh-terminal-markers function)
+    (advice-add function :after #'my/bookmarks-refresh-terminal-markers)))
+(dolist (function '(bm-freeze bm-freeze-in-front))
+  (unless (advice-member-p #'my/bookmarks--after-edit function)
+    (advice-add function :after #'my/bookmarks--after-edit)))
+(add-hook 'window-state-change-functions #'my/bookmarks-refresh-terminal-markers)
+
 ;; Original orange ribbon; hl-line-like tint instead of a solid color slab.
 (defun my/bookmarks-refresh-appearance (&rest _)
   "Apply bookmark colors and ribbon markers, including existing bookmarks."
   (interactive)
-  (dolist (frame (cons nil (frame-list)))
-    (dolist (face '(bm-face bm-persistent-face))
-      (set-face-attribute face frame
-                          :background (my/bookmarks-line-background frame)
-                          :foreground 'unspecified :box nil :inverse-video nil))
-    (dolist (face '(bm-fringe-face bm-fringe-persistent-face))
-      (set-face-attribute face frame :foreground my/bookmark-orange
-                          :background 'unspecified :box nil :inverse-video nil)))
+  ;; Apply future-frame defaults separately; nil would rewrite every frame.
+  (dolist (frame (cons t (frame-list)))
+    (let* ((limited (and (framep frame) (not (display-graphic-p frame))
+                         (< (display-color-cells frame) 256)))
+           (orange (apply #'color-rgb-to-hex
+                          (append (or (my/bookmarks-color-rgb my/bookmark-orange frame)
+                                      '(1.0 0.5 0.0)) '(2))))
+           (background (if limited my/bookmark-terminal-low-color
+                         (my/bookmarks-line-background frame)))
+           (foreground (if limited "black" 'unspecified)))
+      (dolist (face '(bm-face bm-persistent-face))
+        (set-face-attribute face frame :background background :foreground foreground
+                            :box nil :inverse-video nil))
+      (dolist (face '(bm-fringe-face bm-fringe-persistent-face my/bookmark-terminal-marker))
+        (set-face-attribute face frame
+                            :foreground (if limited my/bookmark-terminal-low-color orange)
+                            :background 'unspecified :box nil :inverse-video nil))))
   ;; Fringe markers cannot display font glyphs.  This 8x16 bitmap is
   ;; rasterized from Nerd Font nf-fa-bookmark (U+F02E), NFM.ttf.
   ;; It fits the existing fringe without adding a margin or moving text.
@@ -68,6 +165,7 @@ this value, run `my/bookmarks-refresh-appearance'."
     (with-current-buffer buffer
       (when (> (bm-count) 0)
         (bm-redraw-bookmarks))))
+  (my/bookmarks-refresh-terminal-markers)
   (force-mode-line-update t))
 
 (add-hook 'enable-theme-functions #'my/bookmarks-refresh-appearance)

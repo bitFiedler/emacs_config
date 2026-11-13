@@ -897,19 +897,35 @@ A mouse highlight is not by itself a clipboard copy in your configuration. In no
 
 ## Bookmarks
 
-`bookmarks_config.el` loads local `bm.el`, enables cycling across buffers and uses line-plus-fringe highlighting. The ribbon is Nerd Font `nf-fa-bookmark` (U+F02E, ), rasterized into an 8×16 fringe bitmap. This fits the existing fringe without adding a text margin; a fringe cannot directly display a font glyph. The same ribbon is supplied for the left/right marker definitions.
+`bookmarks_config.el` configures the external `bm` package, enables cycling across buffers and uses line-plus-fringe highlighting. Graphical Emacs displays Nerd Font `nf-fa-bookmark` (U+F02E, ) as the existing 8×16 fringe bitmap; a graphical fringe cannot directly display a font glyph. GUI editing margins remain unchanged.
+
+Terminal Emacs has no graphical fringe. It now displays the **actual Nerd Font ribbon glyph** in a small left margin beside the editing area/line numbers. Each marker overlay belongs to its specific terminal window, so GUI and terminal windows can show the same buffer without changing each other's marker representation. Existing margins are preserved, space is reserved only while the window shows bookmarked content, and the previous margin is restored when the last bookmark is removed or the window switches to an unmarked buffer. Marker updates follow bookmark addition, removal, redraw and edits without inserting any buffer text.
 
 | Option / behavior | Current value |
 |---|---|
-| `my/bookmark-orange` | `DarkOrange1`, the original orange |
+| `my/bookmark-orange` | `DarkOrange1`, standard RGB `#FF7F00`, the original GUI orange |
 | `my/bookmark-line-tint` | `0.18`: 18% orange blended into the hl-line background |
-| Bookmark foreground | Unspecified, preserving syntax foreground colors |
-| Fringe marker background | Unspecified; no separate rectangular orange background |
+| Bookmark foreground | Unspecified in GUI/256-color/truecolor frames, preserving syntax foreground colors |
+| Fringe/margin marker background | Unspecified; no separate rectangular orange background |
+| `my/bookmark-terminal-markers` | `t`: show a left-side ribbon in terminal windows |
+| `my/bookmark-terminal-symbol` | `` (`nf-fa-bookmark`); change to `B` or another symbol if needed |
+| `my/bookmark-terminal-low-color` | `yellow`: fallback for terminals with fewer than 256 colors; marked lines use black foreground on yellow for readability |
+| `my/bookmark-terminal-marker` | Face for the terminal ribbon; orange and bold by default |
 | Persistent bookmarks | Same configured orange/tint styling; persistence itself is not automatically enabled by this file |
 
-The subtle tinted line is a **color blend**, not a separate opacity setting; it uses the frame's same background alpha as hl-line. Run `M-x my/bookmarks-refresh-appearance` after changing the two options or hl-line manually. Theme enable and frame creation also refresh appearance, including existing bookmark overlays.
+The blend now resolves standard color RGB values **before** terminal palette approximation, instead of blending already rounded terminal colors. GUI, truecolor and 256-color frames request the same orange and tint; 256-color terminals approximate those RGB values, while very limited terminals use the explicit yellow fallback rather than a red-looking tint. The subtle tinted line is a **color blend**, not independent opacity. GUI alpha follows the frame background; terminal transparency belongs to the terminal application.
 
-The keys are `F2` toggle, `C-F2` next, `S-F2` previous, and `C-S-F2` clear the current buffer's bookmarks. Helm BM is declared as a picker integration. Persistent storage and annotation commands are supplied by bm; use `C-h f` / `M-x bm-customize` for its own package options.
+The terminal application's font must contain Nerd Font symbols. For a Windows-hosted WSL terminal this means installing/selecting a suitable font on Windows, as described in the font setup section. The symbol is configurable, so a plain `B` can be used where icon fonts are unavailable.
+
+Apply to an active session using `M-:`:
+
+```elisp
+(load-file "~/emacstools/bookmarks_config.el")
+```
+
+Run `M-x my/bookmarks-refresh-appearance` after changing colors, marker options or hl-line manually. Theme enable and frame creation also refresh existing bookmark overlays. Window changes maintain the terminal markers automatically. The keys remain `F2` toggle, `C-F2` next, `S-F2` previous, and `C-S-F2` clear the current buffer's bookmarks. Helm BM is declared as a picker integration. Persistent storage and annotation commands are supplied by bm; use `C-h f` / `M-x bm-customize` for its own package options.
+
+Validation: eight ERT checks cover display-independent tint calculation, high/low-color terminal faces, GUI fringe preservation, terminal ribbon/window ownership, unchanged buffer text and modified state, margin restoration, window-buffer switches, marker movement after edits, disabling markers and repeat loading. Isolated real `emacs -nw` sessions confirmed U+F02E in the left margin with line numbers in both truecolor and 256-color terminals; the latter emits warm-orange palette index 208 for the ribbon.
 
 ## Breadcrumb and Markdown preview overview
 

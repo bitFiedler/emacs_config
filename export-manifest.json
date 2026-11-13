@@ -38,8 +38,8 @@
   {
     "source": "emacstools/bookmarks_config.el",
     "destination": "emacstools/bookmarks_config.el",
-    "source_sha256": "5fac7fad6279b327223fe459e3ba47e054cbdbf2875a8a481136d130622cb7f8",
-    "export_sha256": "20fc0781ccf09581e15136c45f10fca85c5b0ab63f1db86a6750500b7981a0ff"
+    "source_sha256": "9486e03f425c48eb63c71fab631285282a31ad0d1f01e6eb2e79ed5ee955ea85",
+    "export_sha256": "9486e03f425c48eb63c71fab631285282a31ad0d1f01e6eb2e79ed5ee955ea85"
   },
   {
     "source": "emacstools/c_cpp_templates.el",
