@@ -1,6 +1,6 @@
 # Personal Emacs configuration
 
-Exported on **13 November 2026** from Matthias Popp's working configuration. This repository tracks personal settings, extensions, tests and documentation. Installed packages and upstream source trees are dependencies, not vendored code. No live configuration is replaced by this export.
+Exported on **13 November 2026** from Matthias Popp's working configuration. This repository tracks personal settings, extensions, tests and documentation. Installed packages and upstream source trees are dependencies, not vendored code. Fonts are bundled as an explicit exception for installation on new devices. No live configuration is replaced by this export.
 
 ## Emacs version and devices
 
@@ -17,6 +17,7 @@ Terminal Emacs uses the terminal's font. `my-device-font.el` selects graphical s
 
 - `.emacs` and `.emacs.d/{early-init,custom}.el`: home-directory configuration.
 - `emacstools/`: personal modules, integration settings, tests and Markdown assets.
+- `fonts/`: bundled TTFs, license notices, checksum manifest and a user-local installer.
 - `legacy/`: inactive personal settings and historic Matthias Popp ADSP/template extensions; not loaded automatically.
 - `docs/`: focused guides; the consolidated working reference follows below.
 - `export-manifest.json`: source and exported hashes for the explicit allowlist.
@@ -35,18 +36,79 @@ Emacs packages declared with `use-package :ensure` are installed through the con
 | ASCII table | Alex Schroeder's legacy `ascii-table.el` version 1.0.0, [EmacsWiki AsciiTable](https://www.emacswiki.org/emacs/AsciiTable), installed separately at `~/emacstools/ascii-table.el`. Its `ascii-table-hex`/octal API is required. The newer MELPA package with the same name is a different implementation; compatibility has not been established. The personal read-only/`q` integration is included as `my-ascii-table.el`. |
 | Xah insertion commands | Clone [xahlee/xah-fly-keys](https://github.com/xahlee/xah-fly-keys) into `~/emacstools/xah-fly-keys`. Exported `xah_extension.el` contains only personal bindings and autoloads, including modern Unicode angle-command names. The modal editing mode is not enabled. Older unbound helper snippets listed in the historic reference are not bundled. |
 | Livedown | Install npm package `livedown` externally; the custom Markdown renderer uses its dependencies |
-| Fonts | Install JetBrains Mono and Symbols Nerd Font Mono from their upstream projects. For browser preview, convert the Symbols font using `woff2_compress` and place it at `~/emacstools/assets/nerd-symbols.woff2`; the third-party font binary is excluded |
+| Fonts | Bundled under `fonts/`, with the preview WOFF2 in `emacstools/assets/`; run `python3 fonts/install.py`. See the bundled-font section below. |
 | Language servers and tools | Install the configured servers (e.g. clangd/Python server), ripgrep, optional `wl-copy`/`wl-paste`, Git and build tools through the system package manager; see language, clipboard and startup sections below |
 | Tree-sitter grammars | Install the grammars referenced by the configuration using Emacs grammar installation facilities; generated parser binaries are excluded |
 | Legacy a2ps | Historic F11/F12 printer bindings reference an external a2ps Lisp integration; this inactive upstream library is not bundled |
 
-Excluded: ELPA/Quelpa package directories, upstream Git checkouts, compiled Lisp/native modules, fonts, backups, autosaves, sessions, recent files, clipboard/history data and obsolete credential comments. Export adjustments include package-managed bm, the bindings-only Xah adapter, repository-local test loading, and updating stale font documentation/test expectations to the current 9 pt setting on N900D9658. Historic Latin-1 personal sources are converted to UTF-8 without dropping characters. The ASCII read-only improvement was also applied to the live configuration after backing up its C/C++ integration and guide.
+Excluded: ELPA/Quelpa package directories, upstream Git checkouts, compiled Lisp/native modules, backups, autosaves, sessions, recent files, clipboard/history data and obsolete credential comments. Export adjustments include package-managed bm, the bindings-only Xah adapter, repository-local test loading, and updating stale font documentation/test expectations to the current 9 pt setting on N900D9658. Historic Latin-1 personal sources are converted to UTF-8 without dropping characters. The ASCII read-only improvement was also applied to the live configuration after backing up its C/C++ integration and guide.
+
+## Bundled fonts and installation on a new device
+
+Fonts are an explicit exception to the rule excluding third-party dependencies: the repository now includes the fonts selected by the active configuration so installation does not require downloading or converting them.
+
+| Files | Purpose / version | Attribution |
+| --- | --- | --- |
+| `fonts/JetBrainsMono/JetBrainsMono-*.ttf` | Complete unpatched JetBrains Mono styles, version 2.304; editing and inherited bold/italic faces | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono/tree/v2.304), SIL OFL 1.1; bundled `OFL.txt` |
+| `fonts/JetBrainsMono/JetBrainsMonoNL-*.ttf` | Complete JetBrains Mono NL styles, version 2.304; includes the NL ExtraBold face referenced by the config | Same JetBrains license |
+| `fonts/SymbolsNerdFontMono/NFM.ttf` | Symbols Nerd Font Mono, Nerd Fonts 3.4.0; icon font used by `nerd-icons` | [Nerd Fonts symbols](https://github.com/ryanoasis/nerd-fonts/tree/v3.4.0/patched-fonts/NerdFontsSymbolsOnly); bundled upstream MIT notice and component license audit |
+| `emacstools/assets/nerd-symbols.woff2` | Existing converted symbols font used by local preview and standalone HTML export | Symbols font notices above apply; no conversion needed on the new device |
+
+The font files are copied unchanged from the working machine, with SHA-256 hashes and TTF metadata recorded in `fonts/manifest.json`. Installed Nerd Font patched variants of JetBrains Mono are not selected by the active config and are not duplicated here. Preserve the bundled font license notices when redistributing.
+
+From the repository root, install for the current Linux user:
+
+```sh
+python3 fonts/install.py
+```
+
+This copies TTFs and their notices into `${XDG_DATA_HOME:-~/.local/share}/fonts/emacs-config/`, and the preview WOFF2 into `~/emacstools/assets/`. It skips unchanged files, backs up each changed destination under `~/emacstools/backup/fonts/`, and refreshes the font cache if `fc-cache` is installed. It does not replace your Emacs configuration. Inspect destinations first with `python3 fonts/install.py --dry-run`; use `--help` for custom destinations. Python 3 is the only installer dependency. Validation covered dry-run with no writes, installation into an isolated directory, an unchanged second run, and verified backup/replacement of an existing font. Restart graphical Emacs if it does not detect newly installed fonts.
+
+For Windows-hosted WSL terminals, also install the bundled TTFs **on Windows**, then choose a terminal font with the required symbol coverage/fallback. The Linux installer cannot change Windows Terminal's font settings. A Linux graphical Emacs uses the Linux font installation.
+
+Bundling the fonts makes Emacs and the custom HTML preview easier to set up; GitHub's README viewer still cannot load a custom font from Markdown. Use icon images for guaranteed GitHub display.
+
+## Nerd Font symbols: installation and rendering problems
+
+Nerd Font icons are characters in Unicode's Private Use Areas. Their appearance depends on a compatible font; a square, empty box or incorrect symbol usually means that the viewer has no matching glyph or uses an incompatible font version. Installing the Emacs `nerd-icons` package supplies icon names and lookup code, and the corresponding font must also be installed. See the [upstream nerd-icons installation instructions](https://github.com/rainstormstudio/nerd-icons.el#installing-fonts).
+
+The repository includes the required TTFs and preview WOFF2. Run `python3 fonts/install.py` after cloning to install them; merely storing fonts in Git does not register them with the operating system. There are separate rendering environments:
+
+| Where the icons are viewed | Required setup |
+| --- | --- |
+| Graphical Emacs, including breadcrumbs | Run `M-x nerd-icons-install-fonts` to install Symbols Nerd Font Mono, then restart Emacs if the new font is not detected. Check `M-: (find-font (font-spec :family "Symbols Nerd Font Mono"))`; a non-nil result means Emacs can find it. |
+| `emacs -nw` | Select a Nerd Font in the terminal application's settings. In WSL, a Windows terminal needs the font installed on Windows; installing a font only inside Debian does not configure the Windows terminal. |
+| Custom Livedown preview or exported HTML | Supply the WOFF2 file configured by `my/markdown-nerd-font-file`. The personal preview/export module embeds that file in the generated HTML, so recipients of that HTML do not need to install the font. |
+| GitHub's rendered `readme.md` | The page uses GitHub/browser fonts. Markdown cannot force GitHub to load the embedded font used by the local HTML preview. For reliable icons for all readers, use SVG/PNG images with descriptive alt text, or plain-text icon names. |
+
+### Rebuilding the preview/export font (optional)
+
+The bundled WOFF2 needs no conversion. To rebuild it instead, install Symbols Nerd Font Mono from [nerd-icons](https://github.com/rainstormstudio/nerd-icons.el/tree/main/fonts) or [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts). With `woff2_compress` installed through the system package manager, convert the downloaded `NFM.ttf`:
+
+```sh
+woff2_compress /path/to/NFM.ttf
+mkdir -p ~/emacstools/assets
+# Back up an existing destination before replacing it.
+cp /path/to/NFM.woff2 ~/emacstools/assets/nerd-symbols.woff2
+```
+
+Alternatively, point the preview at an existing WOFF2 file without copying it:
+
+```elisp
+(setq my/markdown-nerd-font-file "/absolute/path/to/nerd-symbols.woff2")
+```
+
+Keep the font/icon data versions compatible when synchronizing devices. The preview reports `Nerd Font file is missing: ...` if this asset has not been installed; that error concerns the external asset, rather than a missing Markdown renderer. The repository's `*.woff2` ignore rule has a narrow exception for the bundled preview asset.
+
+### Can the font be added directly to the README?
+
+The README can contain icon characters, installation instructions and image references. Embedding a font with a `<style>`/`@font-face` block will **not** make GitHub's README viewer render those characters reliably: [GitHub sanitizes rendered markup and removes custom styles](https://github.com/github/markup#github-markup). Uploading the font beside the README alone does not change the viewer's font. Local standalone HTML exported by the custom Markdown module supports embedded fonts; GitHub README rendering is a separate viewer.
 
 ## Validation and scope
 
 The test files are personal ERT suites. They are development checks, not startup dependencies. Test module loading is relative to this repository. Some older tests still require local YAML project fixtures; these require that environment and are not portable fixtures. Syntax checks can run without evaluating the full init. Loading the entire init may install packages or start services, so it is not used as an automated export test.
 
-Export validation on 13 November 2026: all 42 Lisp files passed syntax checks, the Node renderer passed `node --check`, and all 93 ERT tests passed with locally installed dependencies/fixtures. Markdown tests require the separately installed Nerd Font: when testing directly from this checkout, set `my/markdown-nerd-font-file` to that external file before loading its test suite. ASCII checks additionally verified read-only protection, `q`, repeated regeneration, the default limit 255 and an explicit limit of 127. Values 128–255 display using Emacs character names/glyphs; there is no universal extended-ASCII code page implied. A credential-pattern scan found no matching secrets in the export.
+Export validation on 13 November 2026: all 42 Lisp files passed syntax checks, the Node renderer passed `node --check`, and all 93 ERT tests passed with locally installed dependencies/fixtures. Markdown tests originally used the separately installed Nerd Font; the checkout now includes the WOFF2 at the default module-relative path, so no external font override is needed. ASCII checks additionally verified read-only protection, `q`, repeated regeneration, the default limit 255 and an explicit limit of 127. Values 128–255 display using Emacs character names/glyphs; there is no universal extended-ASCII code page implied. A credential-pattern scan found no matching secrets in the export.
 
 The following reference describes the working source configuration; where upstream layout differs in this export, the dependency and export notes above take precedence.
 

@@ -2,6 +2,7 @@
 *.eln
 *.so
 *.woff2
+!emacstools/assets/nerd-symbols.woff2
 *~
 \#*\#
 *.bak*
