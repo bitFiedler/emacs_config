@@ -11,6 +11,7 @@
   (declare (indent 0))
   `(save-window-excursion
      (with-temp-buffer
+       (rename-buffer "bookmark-test-editing" t)
        (switch-to-buffer (current-buffer))
        (insert "first line\nsecond line\nthird line\n")
        (goto-char (point-min))
@@ -51,7 +52,7 @@
       (set-buffer-modified-p nil)
       (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) nil)))
         (bm-bookmark-add)
-        (should (equal (window-margins window) '(5 . 1)))
+        (should (equal (window-margins window) '(3 . 1)))
         (should (= (length my/bookmarks--terminal-overlays) 1))
         (let* ((marker (car my/bookmarks--terminal-overlays))
                (display (get-text-property 0 'display (overlay-get marker 'before-string))))
@@ -111,5 +112,21 @@
                   (when (eq function #'my/bookmarks-refresh-terminal-markers)
                     (setq count (1+ count)))) 'bm-bookmark-add)
     (should (= count 1))))
+
+(ert-deftest my/bookmarks-terminal-column-stays-fixed-while-toggling-bookmarks ()
+  (my/bookmarks-test-window
+    (cl-letf (((symbol-function 'display-graphic-p) (lambda (&rest _) nil)))
+      (set-window-margins nil 0 0)
+      (my/bookmarks-refresh-terminal-markers)
+      (let ((width (window-body-width))
+            (margins (window-margins)))
+        (should (equal margins '(1)))
+        (bm-bookmark-add)
+        (should (= width (window-body-width)))
+        (should (equal margins (window-margins)))
+        (bm-bookmark-remove)
+        (should (= width (window-body-width)))
+        (should (equal margins (window-margins)))
+        (should (eq (face-attribute 'my/bookmark-terminal-marker :weight) 'normal))))))
 
 (ert-run-tests-batch-and-exit)

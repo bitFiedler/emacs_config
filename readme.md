@@ -43,6 +43,8 @@ The dry run writes nothing and does not prompt. Normal installation lists the ch
 python3 install.py --backup
 ```
 
+When maintaining this Git checkout, committed files with a clean working copy rely on Git history for recovery. Make a separate backup before replacing uncommitted edits or files outside Git. The installer still backs up conflicting local destinations for its recovery manifest, because those older local files are not necessarily represented by the checkout history.
+
 Correct links are left alone, so rerunning normally makes no changes. An existing `~/.emacs.d/custom.el` is preserved as-is; on a new machine it is seeded as a regular local copy. Emacs can keep saving Customize settings locally. Shared preferences should be promoted into tracked modules deliberately. Package directories, upstream checkouts, sessions, histories, backups and unrelated files stay local. Parent directory symlinks or file/directory conflicts in parent paths are rejected before changes, rather than replacing a whole configuration directory.
 
 Stale `.emacs.elc`, `early-init.elc` and compiled siblings of installed Lisp modules are included in the backup prompt and moved aside, so they cannot mask linked source. Existing destination files, symlinks (including broken links) and directories are moved into a private backup session before replacement; symlinks are preserved as links, not dereferenced. Each session has a journal at:
@@ -899,7 +901,7 @@ A mouse highlight is not by itself a clipboard copy in your configuration. In no
 
 `bookmarks_config.el` configures the external `bm` package, enables cycling across buffers and uses line-plus-fringe highlighting. Graphical Emacs displays Nerd Font `nf-fa-bookmark` (U+F02E, ) as the existing 8×16 fringe bitmap; a graphical fringe cannot directly display a font glyph. GUI editing margins remain unchanged.
 
-Terminal Emacs has no graphical fringe. It now displays the **actual Nerd Font ribbon glyph** in a small left margin beside the editing area/line numbers. Each marker overlay belongs to its specific terminal window, so GUI and terminal windows can show the same buffer without changing each other's marker representation. Existing margins are preserved, space is reserved only while the window shows bookmarked content, and the previous margin is restored when the last bookmark is removed or the window switches to an unmarked buffer. Marker updates follow bookmark addition, removal, redraw and edits without inserting any buffer text.
+Terminal Emacs has no graphical fringe. It displays the **actual Nerd Font ribbon glyph** at normal weight in a fixed one-cell left column beside the editing area/line numbers. There is no extra blank padding. Terminal glyphs occupy character cells and cannot be shrunk with Emacs pixel-height settings. Each marker overlay belongs to its specific terminal window, so GUI and terminal windows can show the same buffer without changing each other's marker representation. Editing windows keep that column even when they have no bookmarks, so toggling a bookmark does not move text or line numbers. Existing left margins are reused rather than enlarged; a wider existing margin is preserved. The original margin is restored when markers are disabled or the window switches to a non-editing utility buffer. A reload can adjust the old two-cell layout once; subsequent bookmark toggles keep the layout stable. Marker updates follow bookmark addition, removal, redraw and edits without inserting any buffer text.
 
 | Option / behavior | Current value |
 |---|---|
@@ -907,10 +909,11 @@ Terminal Emacs has no graphical fringe. It now displays the **actual Nerd Font r
 | `my/bookmark-line-tint` | `0.18`: 18% orange blended into the hl-line background |
 | Bookmark foreground | Unspecified in GUI/256-color/truecolor frames, preserving syntax foreground colors |
 | Fringe/margin marker background | Unspecified; no separate rectangular orange background |
-| `my/bookmark-terminal-markers` | `t`: show a left-side ribbon in terminal windows |
+| `my/bookmark-terminal-markers` | `t`: show a left-side ribbon and reserve a stable column in terminal editing windows |
+| `my/bookmark-terminal-column-width` | `1` cell minimum; reuse a larger existing margin, and allow enough width for a custom wider symbol |
 | `my/bookmark-terminal-symbol` | `` (`nf-fa-bookmark`); change to `B` or another symbol if needed |
 | `my/bookmark-terminal-low-color` | `yellow`: fallback for terminals with fewer than 256 colors; marked lines use black foreground on yellow for readability |
-| `my/bookmark-terminal-marker` | Face for the terminal ribbon; orange and bold by default |
+| `my/bookmark-terminal-marker` | Face for the terminal ribbon; orange and normal weight by default |
 | Persistent bookmarks | Same configured orange/tint styling; persistence itself is not automatically enabled by this file |
 
 The blend now resolves standard color RGB values **before** terminal palette approximation, instead of blending already rounded terminal colors. GUI, truecolor and 256-color frames request the same orange and tint; 256-color terminals approximate those RGB values, while very limited terminals use the explicit yellow fallback rather than a red-looking tint. The subtle tinted line is a **color blend**, not independent opacity. GUI alpha follows the frame background; terminal transparency belongs to the terminal application.
@@ -925,7 +928,7 @@ Apply to an active session using `M-:`:
 
 Run `M-x my/bookmarks-refresh-appearance` after changing colors, marker options or hl-line manually. Theme enable and frame creation also refresh existing bookmark overlays. Window changes maintain the terminal markers automatically. The keys remain `F2` toggle, `C-F2` next, `S-F2` previous, and `C-S-F2` clear the current buffer's bookmarks. Helm BM is declared as a picker integration. Persistent storage and annotation commands are supplied by bm; use `C-h f` / `M-x bm-customize` for its own package options.
 
-Validation: eight ERT checks cover display-independent tint calculation, high/low-color terminal faces, GUI fringe preservation, terminal ribbon/window ownership, unchanged buffer text and modified state, margin restoration, window-buffer switches, marker movement after edits, disabling markers and repeat loading. Isolated real `emacs -nw` sessions confirmed U+F02E in the left margin with line numbers in both truecolor and 256-color terminals; the latter emits warm-orange palette index 208 for the ribbon.
+Validation: nine ERT checks cover display-independent tint calculation, high/low-color terminal faces, GUI fringe preservation, terminal ribbon/window ownership, unchanged buffer text and modified state, margin restoration, window-buffer switches, marker movement after edits, disabling markers, repeat loading and unchanged window body width/margins when toggling bookmarks. Isolated real `emacs -nw` sessions confirmed U+F02E in the left margin with line numbers in both truecolor and 256-color terminals; the latter emits warm-orange palette index 208 for the ribbon. A real-terminal toggle check also confirmed an unchanged one-column margin and text-area width before adding, while displaying, and after removing a bookmark.
 
 ## Breadcrumb and Markdown preview overview
 

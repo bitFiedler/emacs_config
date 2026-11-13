@@ -34,8 +34,13 @@ this value, run `my/bookmarks-refresh-appearance'."
   :type 'float :group 'bm)
 
 (defcustom my/bookmark-terminal-markers t
-  "Show a left-margin ribbon in terminal windows containing bookmarks."
+  "Show terminal ribbons and reserve a stable column in editing windows."
   :type 'boolean :group 'bm)
+(defcustom my/bookmark-terminal-column-width 1
+  "Minimum fixed terminal bookmark column width, in character cells.
+Existing left margins are reused. A wider custom symbol may need more cells.
+Run `my/bookmarks-refresh-appearance' after changing this value."
+  :type 'integer :group 'bm)
 (defcustom my/bookmark-terminal-symbol ""
   "Terminal bookmark ribbon (nf-fa-bookmark). The terminal needs a Nerd Font.
 Use a simple character such as B if the terminal lacks that font."
@@ -44,7 +49,7 @@ Use a simple character such as B if the terminal lacks that font."
   "Bookmark fallback color for terminals with fewer than 256 colors."
   :type 'color :group 'bm)
 (defface my/bookmark-terminal-marker
-  '((t (:foreground "#FF7F00" :weight bold)))
+  '((t (:foreground "#FF7F00" :weight normal)))
   "Terminal ribbon with the same orange as the graphical bookmark."
   :group 'bm)
 
@@ -74,13 +79,13 @@ Use a simple character such as B if the terminal lacks that font."
   "Guard against recursive window changes during marker refresh.")
 
 (defun my/bookmarks--terminal-margin (window active width)
-  "Reserve WIDTH columns for an ACTIVE marker on WINDOW, or restore its margin."
+  "Keep a stable WIDTH-column gutter on an ACTIVE WINDOW, reusing margins."
   (let* ((saved (window-parameter window 'my/bookmark-original-margins))
          (installed (window-parameter window 'my/bookmark-installed-margins))
          (current (window-margins window)))
     (if active
         (let* ((original (if (and saved (equal current installed)) (cdr saved) current))
-               (desired (cons (+ (or (car original) 0) width) (cdr original))))
+               (desired (cons (max (or (car original) 0) width) (cdr original))))
           (set-window-parameter window 'my/bookmark-original-margins (cons t original))
           (set-window-parameter window 'my/bookmark-installed-margins desired)
           (unless (equal current desired)
@@ -90,6 +95,19 @@ Use a simple character such as B if the terminal lacks that font."
           (set-window-margins window (cadr saved) (cddr saved)))
         (set-window-parameter window 'my/bookmark-original-margins nil)
         (set-window-parameter window 'my/bookmark-installed-margins nil)))))
+
+(defun my/bookmarks--editing-window-p (window)
+  "Whether WINDOW is an editing window that needs a stable marker column."
+  (with-current-buffer (window-buffer window)
+    (if (fboundp 'my/editing-line-numbers-buffer-p)
+        (my/editing-line-numbers-buffer-p)
+      (and (not (minibufferp))
+           (not (string-prefix-p " " (buffer-name)))
+           (not (string-prefix-p "*helm" (downcase (buffer-name))))
+           (not (derived-mode-p 'special-mode 'dired-mode 'comint-mode
+                                'term-mode 'vterm-mode 'eshell-mode))
+           (or buffer-file-name
+               (derived-mode-p 'prog-mode 'text-mode 'conf-mode 'fundamental-mode))))))
 
 (defun my/bookmarks-refresh-terminal-markers (&rest _)
   "Refresh window-specific terminal ribbons while preserving existing margins."
@@ -106,8 +124,12 @@ Use a simple character such as B if the terminal lacks that font."
                      (save-restriction
                        (widen)
                        (let ((lists (bm-lists))) (append (car lists) (cdr lists))))))))
-            (my/bookmarks--terminal-margin window bookmarks
-                                           (max 2 (1+ (string-width my/bookmark-terminal-symbol))))
+            (my/bookmarks--terminal-margin
+             window
+             (and my/bookmark-terminal-markers (not (display-graphic-p frame))
+                  (or bookmarks (my/bookmarks--editing-window-p window)))
+             (max 1 my/bookmark-terminal-column-width
+                  (string-width my/bookmark-terminal-symbol)))
             (dolist (bookmark bookmarks)
               (let* ((marker (make-overlay (overlay-start bookmark) (overlay-end bookmark)
                                             (overlay-buffer bookmark)))
@@ -152,6 +174,8 @@ Use a simple character such as B if the terminal lacks that font."
         (set-face-attribute face frame
                             :foreground (if limited my/bookmark-terminal-low-color orange)
                             :background 'unspecified :box nil :inverse-video nil))))
+  (set-face-attribute 'my/bookmark-terminal-marker nil :weight 'normal)
+  (set-face-attribute 'my/bookmark-terminal-marker t :weight 'normal)
   ;; Fringe markers cannot display font glyphs.  This 8x16 bitmap is
   ;; rasterized from Nerd Font nf-fa-bookmark (U+F02E), NFM.ttf.
   ;; It fits the existing fringe without adding a margin or moving text.
