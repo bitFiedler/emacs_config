@@ -17,12 +17,63 @@ Terminal Emacs uses the terminal's font. `my-device-font.el` selects graphical s
 
 - `.emacs` and `.emacs.d/{early-init,custom}.el`: home-directory configuration.
 - `emacstools/`: personal modules, integration settings, tests and Markdown assets.
+- `install.py`: backup-aware configuration link installer and recovery tool.
+- `tests/test_install.py`: isolated installer/recovery integration checks.
 - `fonts/`: bundled TTFs, license notices, checksum manifest and a user-local installer.
 - `legacy/`: inactive personal settings and historic Matthias Popp ADSP/template extensions; not loaded automatically.
 - `docs/`: focused guides; the consolidated working reference follows below.
 - `export-manifest.json`: source and exported hashes for the explicit allowlist.
 
-The current configuration expects `~/emacstools` and `~/.emacs.d`. Before installing on another device, back up every existing destination, then copy `.emacs`, the two `.emacs.d` files and the selected `emacstools` files to the matching home paths. Do not overwrite the whole `.emacs.d` directory. Install external dependencies below before loading the complete configuration. Do not copy `legacy` into the active load chain automatically. Review device-specific paths and language server commands in `.emacs` for that machine.
+The configuration expects `~/emacstools` and `~/.emacs.d`. Run `python3 install.py --dry-run` to review the linked setup, then `python3 install.py` to install it with conflict prompts and recoverable backups. See the installation/recovery section below. Review device-specific paths and install the external dependencies before starting Emacs.
+
+## Installing linked configuration and recovering backups
+
+Use the repository as the authoritative copy of your personal configuration. The standard-library-only **Python 3** installer creates missing directories and individual absolute symlinks for `.emacs`, `.emacs.d/early-init.el`, personal top-level `.el`/`.cjs` modules and Markdown assets under `~/emacstools/`. Tests and `legacy/` are not installed. Keep the checkout at its installed location; moving it breaks absolute links until the installer is run again from the new location.
+
+Save your buffers and exit Emacs before installation or recovery. From the repository root:
+
+```sh
+python3 install.py --dry-run
+python3 install.py
+```
+
+The dry run writes nothing and does not prompt. Normal installation lists the changes and, if existing paths conflict, asks whether to **back up and replace all**, **skip existing paths**, or **quit**. There is no overwrite-without-backup option. Skipping installs only missing paths and can leave a mixed configuration. Noninteractive runs with conflicts stop unless explicitly given `--backup`:
+
+```sh
+python3 install.py --backup
+```
+
+Correct links are left alone, so rerunning normally makes no changes. An existing `~/.emacs.d/custom.el` is preserved as-is; on a new machine it is seeded as a regular local copy. Emacs can keep saving Customize settings locally. Shared preferences should be promoted into tracked modules deliberately. Package directories, upstream checkouts, sessions, histories, backups and unrelated files stay local. Parent directory symlinks or file/directory conflicts in parent paths are rejected before changes, rather than replacing a whole configuration directory.
+
+Stale `.emacs.elc`, `early-init.elc` and compiled siblings of installed Lisp modules are included in the backup prompt and moved aside, so they cannot mask linked source. Existing destination files, symlinks (including broken links) and directories are moved into a private backup session before replacement; symlinks are preserved as links, not dereferenced. Each session has a journal at:
+
+```text
+~/emacstools/backup/install/<ID>/manifest.json
+```
+
+List sessions and inspect a recovery before applying it:
+
+```sh
+python3 install.py --list-backups
+python3 install.py --restore latest --dry-run
+python3 install.py --restore latest
+# Or choose an exact ID printed by --list-backups:
+python3 install.py --restore BACKUP_ID
+```
+
+`--recover` is an alias for `--restore`. Recovery restores the original destinations, removes newly installed links/local seed files, and removes only empty directories created for the installation. Backup journals are retained. Undo the newest session first if several installations have been applied. If a destination has changed since installation, recovery asks before proceeding and saves the newer data under that session's `recovery-saved/` directory; `--backup` explicitly approves this preservation without prompting. Backup files are moved back during restoration, so the restored session is recorded as complete and a repeat restore is harmless. Recovery also supports a partially completed installation after an interruption; the error prints its recovery ID. It restores local destinations, not the Git checkout's history or changes to files edited through links.
+
+`--home /path/to/home` selects an existing target home directory for installation, listing and recovery; it is useful for testing or another account. All target parents must be real directories. A manifest for a different home, unsafe relative paths, or a changed/missing original file backup is rejected. The checkout must remain available for the installed links to work. Restart Emacs after installation or recovery.
+
+Install bundled fonts separately when needed:
+
+```sh
+python3 fonts/install.py
+```
+
+The font installer has its own backups; configuration recovery does not undo that separate font installation. External libraries and language servers still need the setup described in the dependency table; this link installer does not download packages or upstream checkouts.
+
+Validation: `python3 -m unittest discover -s tests -v` exercises fresh/repeated installs, read-only dry runs, backup/skip/cancel decisions, unattended conflicts, preservation of local Custom/packages/upstream sources, original file modes, broken symlinks, directory contents and stale bytecode, rollback with newer edits, interrupted installation, parent-link rejection and invalid/corrupted recovery data, using isolated temporary homes.
 
 ## Dependencies kept outside Git
 
