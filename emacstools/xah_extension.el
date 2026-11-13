@@ -1,0 +1,16 @@
+;;; xah_extension.el --- Personal bindings for upstream Xah commands -*- lexical-binding: t; -*-
+(add-to-list 'load-path (expand-file-name "~/emacstools/xah-fly-keys"))
+(autoload 'xah-insert-paren "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-(") #'xah-insert-paren)
+(autoload 'xah-insert-brace "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-{") #'xah-insert-brace)
+(autoload 'xah-insert-single-angle-quote‹› "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-,") #'xah-insert-single-angle-quote‹›)
+(autoload 'xah-insert-double-angle-quote«» "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-<") #'xah-insert-double-angle-quote«»)
+(autoload 'xah-insert-ascii-single-quote "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-'") #'xah-insert-ascii-single-quote)
+(autoload 'xah-insert-ascii-double-quote "xah-fly-keys" nil t)
+(global-set-key (kbd "C-x C-\"") #'xah-insert-ascii-double-quote)
+;; Use insertion commands only; do not enable xah-fly-keys mode.
+(provide 'xah_extension)

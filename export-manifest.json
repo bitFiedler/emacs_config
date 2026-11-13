@@ -1,0 +1,224 @@
+[
+  {
+    "source": ".emacs",
+    "destination": ".emacs",
+    "source_sha256": "fd3fd89af97535f79213f267b2a906a8c8ab46d9308f117fda1bf64dfeebe27c",
+    "export_sha256": "1a35c2801c6c2395826771f4310f22a96419a647d7595673db439a086114faa3"
+  },
+  {
+    "source": ".emacs.d/custom.el",
+    "destination": ".emacs.d/custom.el",
+    "source_sha256": "ed2895a507a63cd39f17d41a60f90fb8ff61e8a768623493c7e18d4b0940226e",
+    "export_sha256": "f9eae9657b6644bf594d1a3100d9f90917757c4bb1f43c204ab5526249267331"
+  },
+  {
+    "source": ".emacs.d/early-init.el",
+    "destination": ".emacs.d/early-init.el",
+    "source_sha256": "32cc48a5435fbec9eaa1ce3938391a0b182e87a4f6fe192ee9f7863613d31fed",
+    "export_sha256": "32cc48a5435fbec9eaa1ce3938391a0b182e87a4f6fe192ee9f7863613d31fed"
+  },
+  {
+    "source": "emacstools/assets/markdown-theme-controls.html",
+    "destination": "emacstools/assets/markdown-theme-controls.html",
+    "source_sha256": "19090c0757024aa2d305b02e8f18b01a9e669b5fa42a0114f63d54b219d7f83a",
+    "export_sha256": "19090c0757024aa2d305b02e8f18b01a9e669b5fa42a0114f63d54b219d7f83a"
+  },
+  {
+    "source": "emacstools/assets/markdown-theme.css",
+    "destination": "emacstools/assets/markdown-theme.css",
+    "source_sha256": "0d82e58bcac3c91ad789f687e9b366918286eb81cf4fa5ccffcb551a1995bf8c",
+    "export_sha256": "0d82e58bcac3c91ad789f687e9b366918286eb81cf4fa5ccffcb551a1995bf8c"
+  },
+  {
+    "source": "emacstools/assets/markdown-theme.js",
+    "destination": "emacstools/assets/markdown-theme.js",
+    "source_sha256": "fc98945e829e20911ec1f47ab9cb802965410ed88370b69b9d0a08a57ffa830c",
+    "export_sha256": "fc98945e829e20911ec1f47ab9cb802965410ed88370b69b9d0a08a57ffa830c"
+  },
+  {
+    "source": "emacstools/bookmarks_config.el",
+    "destination": "emacstools/bookmarks_config.el",
+    "source_sha256": "5fac7fad6279b327223fe459e3ba47e054cbdbf2875a8a481136d130622cb7f8",
+    "export_sha256": "20fc0781ccf09581e15136c45f10fca85c5b0ab63f1db86a6750500b7981a0ff"
+  },
+  {
+    "source": "emacstools/c_cpp_templates.el",
+    "destination": "emacstools/c_cpp_templates.el",
+    "source_sha256": "702faeaaab20f2bfd2b1f394dbe932871032c02ab39b85eddbb72919c6ee6b83",
+    "export_sha256": "702faeaaab20f2bfd2b1f394dbe932871032c02ab39b85eddbb72919c6ee6b83"
+  },
+  {
+    "source": "emacstools/c_mode_config.el",
+    "destination": "emacstools/c_mode_config.el",
+    "source_sha256": "3029f8893b6847d0c61e0273baa7c0adb60b00c0909ac0aa8da6cdce784ba112",
+    "export_sha256": "3029f8893b6847d0c61e0273baa7c0adb60b00c0909ac0aa8da6cdce784ba112"
+  },
+  {
+    "source": "emacstools/json_config.el",
+    "destination": "emacstools/json_config.el",
+    "source_sha256": "9bb3c072e0fd640d941576ad5d79c29f768c03a38c76f93c80e203d02f22d4b1",
+    "export_sha256": "9bb3c072e0fd640d941576ad5d79c29f768c03a38c76f93c80e203d02f22d4b1"
+  },
+  {
+    "source": "emacstools/my-ascii-table.el",
+    "destination": "emacstools/my-ascii-table.el",
+    "source_sha256": "14b4fc7acd55bc2496c5082ca98a2f2cbd3d12fd5d35a0ffd960fac22b054c53",
+    "export_sha256": "14b4fc7acd55bc2496c5082ca98a2f2cbd3d12fd5d35a0ffd960fac22b054c53"
+  },
+  {
+    "source": "emacstools/my-buffer-navigation.el",
+    "destination": "emacstools/my-buffer-navigation.el",
+    "source_sha256": "5adbb7a283c8d623478611cbe2d318d69d601f5df04eacda3590b2c1e3bfce56",
+    "export_sha256": "5adbb7a283c8d623478611cbe2d318d69d601f5df04eacda3590b2c1e3bfce56"
+  },
+  {
+    "source": "emacstools/my-buffer-reload.el",
+    "destination": "emacstools/my-buffer-reload.el",
+    "source_sha256": "41835e045f117ad7a488d4f84ba6a61e5ef534b3b91fa377d42a0a173d9f51a1",
+    "export_sha256": "41835e045f117ad7a488d4f84ba6a61e5ef534b3b91fa377d42a0a173d9f51a1"
+  },
+  {
+    "source": "emacstools/my-context-breadcrumb-tests.el",
+    "destination": "emacstools/my-context-breadcrumb-tests.el",
+    "source_sha256": "34338d2b5a2ba412dc35559b17ffb34f7568b2f16cde6aa3957baeec5b52f7c4",
+    "export_sha256": "34338d2b5a2ba412dc35559b17ffb34f7568b2f16cde6aa3957baeec5b52f7c4"
+  },
+  {
+    "source": "emacstools/my-context-breadcrumb.el",
+    "destination": "emacstools/my-context-breadcrumb.el",
+    "source_sha256": "b3eb0e640466a203e93c66ab52801397fa39ce40b0d64a017afaa84c8395f6c5",
+    "export_sha256": "b3eb0e640466a203e93c66ab52801397fa39ce40b0d64a017afaa84c8395f6c5"
+  },
+  {
+    "source": "emacstools/my-deadgrep-recursion-tests.el",
+    "destination": "emacstools/my-deadgrep-recursion-tests.el",
+    "source_sha256": "279de40476e425c4671c84bb5977c1d79526f5f32337074f38932db09ccf6f0d",
+    "export_sha256": "279de40476e425c4671c84bb5977c1d79526f5f32337074f38932db09ccf6f0d"
+  },
+  {
+    "source": "emacstools/my-deadgrep-recursion.el",
+    "destination": "emacstools/my-deadgrep-recursion.el",
+    "source_sha256": "757614a23d672b59bc8af42286f4d0fa77ebbb93dd135e54dc23bbe80c6038bb",
+    "export_sha256": "757614a23d672b59bc8af42286f4d0fa77ebbb93dd135e54dc23bbe80c6038bb"
+  },
+  {
+    "source": "emacstools/my-device-font-tests.el",
+    "destination": "emacstools/my-device-font-tests.el",
+    "source_sha256": "7e3c62270ab6d917d0762e75634bd97b280f354410dbfa9999e48d09138696b4",
+    "export_sha256": "9d789f1b2a648ff29f07e03a2de84e074a4a08c4cb348e9bd41932ccdf53de54"
+  },
+  {
+    "source": "emacstools/my-device-font.el",
+    "destination": "emacstools/my-device-font.el",
+    "source_sha256": "d85d6af2a80d3c73302cbc22f9a1239e54b12ae51e2d7ca040f319856c417962",
+    "export_sha256": "d85d6af2a80d3c73302cbc22f9a1239e54b12ae51e2d7ca040f319856c417962"
+  },
+  {
+    "source": "emacstools/my-editing-line-numbers.el",
+    "destination": "emacstools/my-editing-line-numbers.el",
+    "source_sha256": "af6edf42f9c376b851db4886690aac082dfe8dc4fde067ec5a240dfffa8cfcc2",
+    "export_sha256": "af6edf42f9c376b851db4886690aac082dfe8dc4fde067ec5a240dfffa8cfcc2"
+  },
+  {
+    "source": "emacstools/my-eglot-retry-limit.el",
+    "destination": "emacstools/my-eglot-retry-limit.el",
+    "source_sha256": "59892c9203248e5a69a6c4f3300983c48cd2bea6b72bb49370c89f4aa0cf98b2",
+    "export_sha256": "59892c9203248e5a69a6c4f3300983c48cd2bea6b72bb49370c89f4aa0cf98b2"
+  },
+  {
+    "source": "emacstools/my-emacs-geometry.el",
+    "destination": "emacstools/my-emacs-geometry.el",
+    "source_sha256": "3012c769b913ab9b3d840fffd988f5e5976c8a78cbdb79b30235f64cb69991b3",
+    "export_sha256": "3012c769b913ab9b3d840fffd988f5e5976c8a78cbdb79b30235f64cb69991b3"
+  },
+  {
+    "source": "emacstools/my-emacs-sessions-tests.el",
+    "destination": "emacstools/my-emacs-sessions-tests.el",
+    "source_sha256": "cf63a42354cf6b5cb6a7436e4589a6ca2671e6ee50eca31a47158f31668cca38",
+    "export_sha256": "cf63a42354cf6b5cb6a7436e4589a6ca2671e6ee50eca31a47158f31668cca38"
+  },
+  {
+    "source": "emacstools/my-emacs-sessions.el",
+    "destination": "emacstools/my-emacs-sessions.el",
+    "source_sha256": "b613c333ae8e8224b26cdfb961691f845ec480199024309b4908d75108f87994",
+    "export_sha256": "b613c333ae8e8224b26cdfb961691f845ec480199024309b4908d75108f87994"
+  },
+  {
+    "source": "emacstools/my-helm-files-tests.el",
+    "destination": "emacstools/my-helm-files-tests.el",
+    "source_sha256": "b72ae7eb7f978f82eb2386c082e3c2ee95566e72c387add6df59289378c1c09c",
+    "export_sha256": "2e454bc39cac02f67ae7c6e0bd915b275b86beee58a5f98b741840f874f48e21"
+  },
+  {
+    "source": "emacstools/my-helm-files.el",
+    "destination": "emacstools/my-helm-files.el",
+    "source_sha256": "f6c79c13990fa7fa39ec010b2467de4b8875f5c2ad3d4e0324bb1b92c26b23b0",
+    "export_sha256": "f6c79c13990fa7fa39ec010b2467de4b8875f5c2ad3d4e0324bb1b92c26b23b0"
+  },
+  {
+    "source": "emacstools/my-markdown-preview-tests.el",
+    "destination": "emacstools/my-markdown-preview-tests.el",
+    "source_sha256": "c4f201b88b57d31e576d754aa9ba8b6ad27c189715d356f430276dac617f290b",
+    "export_sha256": "c4f201b88b57d31e576d754aa9ba8b6ad27c189715d356f430276dac617f290b"
+  },
+  {
+    "source": "emacstools/my-markdown-preview.el",
+    "destination": "emacstools/my-markdown-preview.el",
+    "source_sha256": "305623404bb20bb69113d64a4d35602a574416d72bf54cdc6d9b7d788a5e2db7",
+    "export_sha256": "305623404bb20bb69113d64a4d35602a574416d72bf54cdc6d9b7d788a5e2db7"
+  },
+  {
+    "source": "emacstools/my-markdown-render.cjs",
+    "destination": "emacstools/my-markdown-render.cjs",
+    "source_sha256": "187a830603591787545215426ca130cb08013703e3dda189c2a3fcce3434333c",
+    "export_sha256": "187a830603591787545215426ca130cb08013703e3dda189c2a3fcce3434333c"
+  },
+  {
+    "source": "emacstools/my-pair-editing.el",
+    "destination": "emacstools/my-pair-editing.el",
+    "source_sha256": "d3f7a03c9258c6e860b0cb5ea66541285b6ab457d1f99005c130138bbe2a81c8",
+    "export_sha256": "d3f7a03c9258c6e860b0cb5ea66541285b6ab457d1f99005c130138bbe2a81c8"
+  },
+  {
+    "source": "emacstools/my-startup-performance-tests.el",
+    "destination": "emacstools/my-startup-performance-tests.el",
+    "source_sha256": "5c9231d3656ca3b93a56e8cb65fd3f3b9c9ab8e1fc3c1058a6a5d2a61cb21af1",
+    "export_sha256": "3af0302ecb3c6de7374a9e5afad78296f93fbd090c4d4a5247f470da068947f8"
+  },
+  {
+    "source": "emacstools/my-startup-performance.el",
+    "destination": "emacstools/my-startup-performance.el",
+    "source_sha256": "0f89fc13a9f62e2d4f6c1111701876634e2309c6e3a5d2766f24197c5d29c8bd",
+    "export_sha256": "0f89fc13a9f62e2d4f6c1111701876634e2309c6e3a5d2766f24197c5d29c8bd"
+  },
+  {
+    "source": "emacstools/my-wayland-clipboard.el",
+    "destination": "emacstools/my-wayland-clipboard.el",
+    "source_sha256": "19a50a0b9433f26f89f143a465c591d1fc68d0517c62fd69524d4462ec842549",
+    "export_sha256": "19a50a0b9433f26f89f143a465c591d1fc68d0517c62fd69524d4462ec842549"
+  },
+  {
+    "source": "emacstools/my-yaml-ts-font-lock-tests.el",
+    "destination": "emacstools/my-yaml-ts-font-lock-tests.el",
+    "source_sha256": "ad274d66f60d88d65f52024ad5e8ce52c7d4ae074f9ac254646c8efb960e0bba",
+    "export_sha256": "ad274d66f60d88d65f52024ad5e8ce52c7d4ae074f9ac254646c8efb960e0bba"
+  },
+  {
+    "source": "emacstools/my-yaml-ts-font-lock.el",
+    "destination": "emacstools/my-yaml-ts-font-lock.el",
+    "source_sha256": "abd402be74b35878f4f1a57d3a1268c1590d1d6566b04d482854b9fea2251c2b",
+    "export_sha256": "abd402be74b35878f4f1a57d3a1268c1590d1d6566b04d482854b9fea2251c2b"
+  },
+  {
+    "source": "emacstools/org_config.el",
+    "destination": "emacstools/org_config.el",
+    "source_sha256": "9942cb1bb2ba5456db8aaa73518a7d9e02e951fdc7f92f1c1c469ddfc8dfd883",
+    "export_sha256": "9942cb1bb2ba5456db8aaa73518a7d9e02e951fdc7f92f1c1c469ddfc8dfd883"
+  },
+  {
+    "source": "emacstools/python_config.el",
+    "destination": "emacstools/python_config.el",
+    "source_sha256": "fcc6ad72dea39ab76c7e69ac7a4ebce1ca980a6907942bad0f91355dd7a2a53b",
+    "export_sha256": "fcc6ad72dea39ab76c7e69ac7a4ebce1ca980a6907942bad0f91355dd7a2a53b"
+  }
+]
