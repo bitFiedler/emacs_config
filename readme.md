@@ -1,6 +1,6 @@
 # Personal Emacs configuration
 
-Exported on **13 November 2026** from Matthias Popp's working configuration. This repository tracks personal settings, extensions, tests and documentation. Installed packages and upstream source trees are dependencies, not vendored code. Fonts are bundled as an explicit exception for installation on new devices. No live configuration is replaced by this export.
+Exported on **13 November 2026** from Matthias Popp's working configuration. This repository tracks personal settings, extensions, tests and documentation. Installed packages and upstream source trees are dependencies, not vendored code. Fonts and the legacy ASCII table library are bundled as explicit exceptions for installation on new devices. No live configuration is replaced by this export.
 
 ## Emacs version and devices
 
@@ -87,7 +87,7 @@ Emacs packages declared with `use-package :ensure` are installed through the con
 | bm | MELPA package `bm`, [joodland/bm](https://github.com/joodland/bm); exported bookmark config uses `:ensure t` |
 | ws-butler | Clone [lewang/ws-butler](https://github.com/lewang/ws-butler) into `~/emacstools/ws-butler`, matching the existing `:ensure nil` declaration |
 | vterm | Clone [akermu/emacs-libvterm](https://github.com/akermu/emacs-libvterm) into `~/emacstools/emacs-libvterm`; build its native module with the upstream instructions |
-| ASCII table | Alex Schroeder's legacy `ascii-table.el` version 1.0.0, [EmacsWiki AsciiTable](https://www.emacswiki.org/emacs/AsciiTable), installed separately at `~/emacstools/ascii-table.el`. Its `ascii-table-hex`/octal API is required. The newer MELPA package with the same name is a different implementation; compatibility has not been established. The personal read-only/`q` integration is included as `my-ascii-table.el`. |
+| ASCII table | Bundled as `emacstools/ascii-table.el`: Alex Schroeder's legacy version 1.0.0, copied unchanged from the working configuration on 14 November 2026. Original attribution and GPL-2.0-or-later notice are retained; see [license text](licenses/ascii-table-GPL-2.0.txt) and [upstream reference](https://www.emacswiki.org/emacs/AsciiTable). `install.py` links it to `~/emacstools/ascii-table.el`. The separate personal wrapper `my-ascii-table.el` supplies the 0–255 default, read-only buffer and `q` to quit. This legacy API differs from the newer MELPA package with the same name. |
 | Xah insertion commands | Clone [xahlee/xah-fly-keys](https://github.com/xahlee/xah-fly-keys) into `~/emacstools/xah-fly-keys`. Exported `xah_extension.el` contains only personal bindings and autoloads, including modern Unicode angle-command names. The modal editing mode is not enabled. Older unbound helper snippets listed in the historic reference are not bundled. |
 | Livedown | Install npm package `livedown` externally; the custom Markdown renderer uses its dependencies |
 | Fonts | Bundled under `fonts/`, with the preview WOFF2 in `emacstools/assets/`; run `python3 fonts/install.py`. See the bundled-font section below. |
@@ -2450,4 +2450,4 @@ Checks for this documentation cover source/module coverage, local links, table/f
 
 ## ASCII reference buffer protection
 
-`emacstools/my-ascii-table.el` is personal integration for the external ASCII table library. C/C++ `F10` opens the hexadecimal reference. Decimal, octal and hexadecimal views default to values 0–255 (explicit limits are honored) and are read-only; `q` runs `quit-window` to return to editing. Reopening a table refreshes it normally. The wrapper uses a dedicated `special-mode` derivative and leaves the upstream library unchanged.
+`emacstools/my-ascii-table.el` is personal integration for the bundled legacy ASCII table library. C/C++ `F10` opens the hexadecimal reference. Decimal, octal and hexadecimal views default to values 0–255 (explicit limits are honored) and are read-only; `q` runs `quit-window` to return to editing. Reopening a table refreshes it normally. The wrapper uses a dedicated `special-mode` derivative and leaves the upstream library unchanged.

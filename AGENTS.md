@@ -1,6 +1,6 @@
 # Agent instructions and personal Emacs preferences
 
-These instructions apply to this repository. They record the owner's preferences from the configuration work through 13 November 2026. Follow newer explicit requests when they change a preference. Check the actual configuration before treating a recorded setting as current.
+These instructions apply to this repository. They record the owner's preferences from the configuration work through 14 November 2026. Follow newer explicit requests when they change a preference. Check the actual configuration before treating a recorded setting as current.
 
 ## Working together
 
@@ -26,6 +26,7 @@ These instructions apply to this repository. They record the owner's preferences
 - Use Python for installation/recovery tools. Support dry runs, missing directory creation, repeatable installation, explicit overwrite decisions and rollback to original destinations.
 - Never deploy automatically as part of merely editing or testing the installer. Test installation and recovery using temporary home directories.
 - Track personal settings, integrations, extensions, tests and documentation. Obtain third-party Emacs libraries from package archives or upstream Git repositories; do not vendor their implementations unnecessarily.
+- The legacy `emacstools/ascii-table.el` is also explicitly bundled at the owner's request. Preserve its upstream attribution, GPL-2.0-or-later notice and accompanying license; the personal wrapper keeps the 0–255/read-only/`q` behavior.
 - Fonts are an explicit exception: keep the fonts used by this config, preview WOFF2, original licenses, attribution and checksums in the repository for easy setup on new devices.
 - Keep package trees, compiled Lisp/native artifacts, caches, histories, sessions, credentials, autosaves and backups out of Git. Preserve existing upstream source checkouts.
 - `legacy/` is historical personal material, not part of automatic startup or installation.

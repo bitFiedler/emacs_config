@@ -17,7 +17,6 @@ node_modules/
 emacstools/ws-butler/
 emacstools/emacs-libvterm/
 emacstools/xah-fly-keys/
-emacstools/ascii-table.el
 emacstools/bm.el
 
 # Python installer/test caches

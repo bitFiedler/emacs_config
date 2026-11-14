@@ -232,5 +232,11 @@
     "destination": "emacstools/my-ligatures-tests.el",
     "source_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393",
     "export_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393"
+  },
+  {
+    "source": "emacstools/ascii-table.el",
+    "destination": "emacstools/ascii-table.el",
+    "source_sha256": "f18560ab0886f21d0b8c4737ba2d1e8f2fee28005e68e62a180f5286609b7705",
+    "export_sha256": "f18560ab0886f21d0b8c4737ba2d1e8f2fee28005e68e62a180f5286609b7705"
   }
 ]
