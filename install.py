@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Link personal Emacs configuration into a home directory, with recoverable backups."""
 import argparse
+import configparser
 import datetime
 import hashlib
 import json
@@ -51,6 +52,25 @@ def check_parents(home, destination):
             raise InstallError(f'Parent must be a real directory, not a link or file: {current}')
 
 
+def submodule_sources(repo):
+    """Read pinned source directories without downloading anything."""
+    manifest = repo / '.gitmodules'
+    if not manifest.exists():
+        return []
+    config = configparser.ConfigParser(interpolation=None)
+    config.read(manifest)
+    sources = []
+    for section in config.sections():
+        name = relative(config[section]['path'])
+        if len(name.parts) != 2 or name.parts[0] != 'emacstools':
+            raise InstallError(f'Unsupported submodule path: {name}')
+        source = repo / name
+        if source.is_symlink() or not source.is_dir() or not (source / '.git').exists():
+            raise InstallError('Initialize submodules first: git submodule update --init --recursive')
+        sources.append(source)
+    return sources
+
+
 def make_plan(repo, home):
     sources = [repo / '.emacs', repo / '.emacs.d/early-init.el']
     sources += sorted(p for p in (repo / 'emacstools').iterdir()
@@ -58,9 +78,10 @@ def make_plan(repo, home):
                       and not p.name.endswith('-tests.el'))
     sources += sorted(p for p in (repo / 'emacstools/assets').iterdir()
                       if p.is_file() and p.suffix in ('.css', '.js', '.html', '.woff2'))
+    modules = submodule_sources(repo)
     plan = []
-    for source in sources:
-        if source.is_symlink() or not source.is_file():
+    for source in sources + modules:
+        if source.is_symlink() or (source not in modules and not source.is_file()):
             raise InstallError(f'Expected a regular repository file: {source}')
         target = home / source.relative_to(repo)
         check_parents(home, target)
@@ -124,8 +145,9 @@ def ensure_parent(home, target, data, session):
         directory.mkdir()
 
 
-def install(repo, home, backup=False, dry_run=False):
-    plan = make_plan(repo, home)
+def install(repo, home, backup=False, dry_run=False, plan=None):
+    if plan is None:
+        plan = make_plan(repo, home)
     conflicts = [entry for entry in plan if entry['original'] is not None]
     for entry in plan:
         action = 'BACK UP + ' if entry['original'] else ''

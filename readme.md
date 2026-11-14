@@ -19,6 +19,8 @@ Terminal Emacs uses the terminal's font. `my-device-font.el` selects graphical s
 - `.emacs` and `.emacs.d/{early-init,custom}.el`: home-directory configuration.
 - `emacstools/`: personal modules, integration settings, tests and Markdown assets.
 - `install.py`: backup-aware configuration link installer and recovery tool.
+- `build-native.py`: Linux/macOS build and user-local installation of vterm and LSP booster.
+- `.gitmodules`: pinned upstream vterm and LSP booster repositories under `emacstools/`.
 - `tests/test_install.py`: isolated installer/recovery integration checks.
 - `fonts/`: bundled TTFs, license notices, checksum manifest and a user-local installer.
 - `legacy/`: inactive personal settings and historic Matthias Popp ADSP/template extensions; not loaded automatically.
@@ -29,11 +31,12 @@ The configuration expects `~/emacstools` and `~/.emacs.d`. Run `python3 install.
 
 ## Installing linked configuration and recovering backups
 
-Use the repository as the authoritative copy of your personal configuration. The standard-library-only **Python 3** installer creates missing directories and individual absolute symlinks for `.emacs`, `.emacs.d/early-init.el`, personal top-level `.el`/`.cjs` modules and Markdown assets under `~/emacstools/`. Tests and `legacy/` are not installed. Keep the checkout at its installed location; moving it breaks absolute links until the installer is run again from the new location.
+Use the repository as the authoritative copy of your personal configuration. The standard-library-only **Python 3** installer creates missing directories and individual absolute symlinks for `.emacs`, `.emacs.d/early-init.el`, personal top-level `.el`/`.cjs` modules, Markdown assets and initialized submodule directories under `~/emacstools/`. Tests and `legacy/` are not installed. Keep the checkout at its installed location; moving it breaks absolute links until the installer is run again from the new location.
 
 Save your buffers and exit Emacs before installation or recovery. From the repository root:
 
 ```sh
+git submodule update --init --recursive
 python3 install.py --dry-run
 python3 install.py
 ```
@@ -46,7 +49,7 @@ python3 install.py --backup
 
 When maintaining this Git checkout, committed files with a clean working copy rely on Git history for recovery. Make a separate backup before replacing uncommitted edits or files outside Git. The installer still backs up conflicting local destinations for its recovery manifest, because those older local files are not necessarily represented by the checkout history.
 
-Correct links are left alone, so rerunning normally makes no changes. An existing `~/.emacs.d/custom.el` is preserved as-is; on a new machine it is seeded as a regular local copy. Emacs can keep saving Customize settings locally. Shared preferences should be promoted into tracked modules deliberately. Package directories, upstream checkouts, sessions, histories, backups and unrelated files stay local. Parent directory symlinks or file/directory conflicts in parent paths are rejected before changes, rather than replacing a whole configuration directory.
+Correct links are left alone, so rerunning normally makes no changes. An existing `~/.emacs.d/custom.el` is preserved as-is; on a new machine it is seeded as a regular local copy. Emacs can keep saving Customize settings locally. Shared preferences should be promoted into tracked modules deliberately. Package directories, unrelated upstream checkouts, sessions, histories and backups stay local. The two declared submodule destinations are linked explicitly; existing directories there use the same backup/skip/cancel decision as other conflicts. Parent directory symlinks or file/directory conflicts in parent paths are rejected before changes, rather than replacing a whole configuration directory.
 
 Stale `.emacs.elc`, `early-init.elc` and compiled siblings of installed Lisp modules are included in the backup prompt and moved aside, so they cannot mask linked source. Existing destination files, symlinks (including broken links) and directories are moved into a private backup session before replacement; symlinks are preserved as links, not dereferenced. Each session has a journal at:
 
@@ -78,7 +81,68 @@ The font installer has its own backups; configuration recovery does not undo tha
 
 Validation: `python3 -m unittest discover -s tests -v` exercises fresh/repeated installs, read-only dry runs, backup/skip/cancel decisions, unattended conflicts, preservation of local Custom/packages/upstream sources, original file modes, broken symlinks, directory contents and stale bytecode, rollback with newer edits, interrupted installation, parent-link rejection and invalid/corrupted recovery data, using isolated temporary homes.
 
-## Dependencies kept outside Git
+## Native dependencies: submodules, Linux and macOS builds
+
+The parent repository pins [emacs-libvterm](https://github.com/akermu/emacs-libvterm) and [emacs-lsp-booster](https://github.com/blahgeek/emacs-lsp-booster) as Git submodules. Their source stays in upstream repositories; native outputs are built separately on each device.
+
+For a new checkout:
+
+```sh
+git clone --recurse-submodules https://github.com/bitFiedler/emacs_config.git
+cd emacs_config
+```
+
+For an existing checkout, or after pulling parent changes:
+
+```sh
+git submodule update --init --recursive
+```
+
+`install.py` rejects missing/uninitialized submodules before making changes. It does not fetch them itself. Ordinary submodule update uses the committed revisions. To upgrade deliberately, select the desired upstream revision inside its submodule and commit the changed gitlink in the parent repository; `--remote` is not needed for installation.
+
+### Build requirements
+
+Use an Emacs built with dynamic module support (`M-: module-file-suffix` must return a suffix), Python 3, Git, CMake >= 3.11, a C compiler, Make, libtool and a current Rust/Cargo toolchain. Installing the system libvterm development library avoids an additional libvterm download during CMake configuration. See the pinned [vterm build instructions](emacstools/emacs-libvterm/README.md) and [booster instructions](emacstools/emacs-lsp-booster/README.md).
+
+Debian/Ubuntu/Pop!_OS prerequisites:
+
+```sh
+sudo apt install build-essential cmake libtool-bin libvterm-dev pkg-config
+```
+
+Install a current Rust toolchain with your preferred package manager or Rustup if Cargo is not available. On macOS, install Xcode Command Line Tools and Homebrew prerequisites:
+
+```sh
+xcode-select --install  # only if the command-line tools are missing
+brew install cmake libtool libvterm pkg-config rust
+```
+
+### Build and install both
+
+From this repository, after saving buffers and exiting Emacs:
+
+```sh
+python3 build-native.py --dry-run
+python3 build-native.py
+```
+
+On macOS, if CMake cannot discover Homebrew libraries, pass its prefix explicitly:
+
+```sh
+python3 build-native.py --cmake-arg=-DCMAKE_PREFIX_PATH="$(brew --prefix)"
+```
+
+The script runs CMake for vterm and `cargo build --release --locked` for the booster. Dependency downloads may require network access. It links both source directories into `~/emacstools/` and copies the executable, with its executable permissions, to `~/.local/bin/emacs-lsp-booster`. Vterm's `vterm.el` and `vterm-module.so` are loaded through the linked source directory already in this config's load path. Only these dependency destinations are installed; it does not deploy the rest of the configuration or install system packages. Build outputs stay inside the submodules' ignored `build/`, `target/` and native-module paths.
+
+Use `--jobs N` to set parallelism (default: up to eight workers), `--build-only` to compile without deploying links/binary, or `--home PATH` for another existing home. `--dry-run` prints commands without building, downloading or writing. Existing destinations prompt for backup/replace, skip or cancel; `--backup` explicitly approves recoverable replacement. Repeated installation skips correct links and an unchanged booster binary. Builds happen before deployment, so cancelling deployment can still leave newly compiled outputs in the checkout. Rebuilding an already linked vterm updates that native module directly; installer rollback restores old destination paths/binaries, not build artifacts inside Git submodules.
+
+Recover deployment using `python3 install.py --list-backups` and `python3 install.py --restore ID` (with the same `--home` if used). The normal journal also restores an older real vterm directory replaced by a source link. Keep `~/.local/bin` on both your shell PATH and Emacs `exec-path`, especially for graphical Emacs launched from macOS Finder. Check with `M-: (executable-find "emacs-lsp-booster")`. Restart Emacs after rebuilding a loaded native module.
+
+The Rust booster executable works with the separate `jdtsmith/eglot-booster` Lisp integration already configured through Quelpa; adding the Rust submodule does not replace that package. Configured language servers must still be installed separately.
+
+Validation uses temporary homes for deployment/rollback, missing submodule rejection and executable permissions, plus command construction checks. Native compilation and macOS execution must be verified on the target device.
+
+## Dependencies and package sources
 
 Emacs packages declared with `use-package :ensure` are installed through the configured GNU ELPA/MELPA archives; `:quelpa` declarations retain their upstream Git recipes. The complete package inventory and customizations appear in the reference below. Package versions are not locked by this export; an installed version is not a dependency lockfile.
 
@@ -86,7 +150,8 @@ Emacs packages declared with `use-package :ensure` are installed through the con
 | --- | --- |
 | bm | MELPA package `bm`, [joodland/bm](https://github.com/joodland/bm); exported bookmark config uses `:ensure t` |
 | ws-butler | Clone [lewang/ws-butler](https://github.com/lewang/ws-butler) into `~/emacstools/ws-butler`, matching the existing `:ensure nil` declaration |
-| vterm | Clone [akermu/emacs-libvterm](https://github.com/akermu/emacs-libvterm) into `~/emacstools/emacs-libvterm`; build its native module with the upstream instructions |
+| vterm | Pinned `emacstools/emacs-libvterm` submodule; initialize it, then run `python3 build-native.py` as described above |
+| LSP booster | Pinned `emacstools/emacs-lsp-booster` submodule; the same script builds/installs its executable. The separate Eglot Lisp adapter remains package-managed through Quelpa. |
 | ASCII table | Bundled as `emacstools/ascii-table.el`: Alex Schroeder's legacy version 1.0.0, copied unchanged from the working configuration on 14 November 2026. Original attribution and GPL-2.0-or-later notice are retained; see [license text](licenses/ascii-table-GPL-2.0.txt) and [upstream reference](https://www.emacswiki.org/emacs/AsciiTable). `install.py` links it to `~/emacstools/ascii-table.el`. The separate personal wrapper `my-ascii-table.el` supplies the 0–255 default, read-only buffer and `q` to quit. This legacy API differs from the newer MELPA package with the same name. |
 | Xah insertion commands | Clone [xahlee/xah-fly-keys](https://github.com/xahlee/xah-fly-keys) into `~/emacstools/xah-fly-keys`. Exported `xah_extension.el` contains only personal bindings and autoloads, including modern Unicode angle-command names. The modal editing mode is not enabled. Older unbound helper snippets listed in the historic reference are not bundled. |
 | Livedown | Install npm package `livedown` externally; the custom Markdown renderer uses its dependencies |
@@ -95,7 +160,7 @@ Emacs packages declared with `use-package :ensure` are installed through the con
 | Tree-sitter grammars | Install the grammars referenced by the configuration using Emacs grammar installation facilities; generated parser binaries are excluded |
 | Legacy a2ps | Historic F11/F12 printer bindings reference an external a2ps Lisp integration; this inactive upstream library is not bundled |
 
-Excluded: ELPA/Quelpa package directories, upstream Git checkouts, compiled Lisp/native modules, backups, autosaves, sessions, recent files, clipboard/history data and obsolete credential comments. Export adjustments include package-managed bm, the bindings-only Xah adapter, repository-local test loading, and updating stale font documentation/test expectations to the current 9 pt setting on N900D9658. Historic Latin-1 personal sources are converted to UTF-8 without dropping characters. The ASCII read-only improvement was also applied to the live configuration after backing up its C/C++ integration and guide.
+Excluded: ELPA/Quelpa package directories, unrelated upstream Git checkouts, compiled Lisp/native modules, backups, autosaves, sessions, recent files, clipboard/history data and obsolete credential comments. Export adjustments include package-managed bm, the bindings-only Xah adapter, repository-local test loading, and updating stale font documentation/test expectations to the current 9 pt setting on N900D9658. Historic Latin-1 personal sources are converted to UTF-8 without dropping characters. The ASCII read-only improvement was also applied to the live configuration after backing up its C/C++ integration and guide.
 
 ## Bundled fonts and installation on a new device
 

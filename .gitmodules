@@ -1,0 +1,6 @@
+[submodule "emacstools/emacs-libvterm"]
+	path = emacstools/emacs-libvterm
+	url = https://github.com/akermu/emacs-libvterm
+[submodule "emacstools/emacs-lsp-booster"]
+	path = emacstools/emacs-lsp-booster
+	url = https://github.com/blahgeek/emacs-lsp-booster

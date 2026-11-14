@@ -15,7 +15,6 @@ node_modules/
 .emacs.d/recentf
 .emacs.d/desktop*
 emacstools/ws-butler/
-emacstools/emacs-libvterm/
 emacstools/xah-fly-keys/
 emacstools/bm.el
 

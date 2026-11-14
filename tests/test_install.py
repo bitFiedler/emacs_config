@@ -45,6 +45,27 @@ class InstallerTests(unittest.TestCase):
     def session(self, identifier):
         return self.home / 'emacstools/backup/install' / identifier
 
+    def test_submodule_directory_install_and_recovery(self):
+        name = 'emacstools/emacs-libvterm'
+        (self.repo / '.gitmodules').write_text(f'[submodule "vterm"]\npath = {name}\nurl = https://example.invalid/vterm\n')
+        module = self.repo / name
+        module.mkdir()
+        (module / '.git').write_text('gitdir: ../../.git/modules/vterm')
+        (module / 'vterm.el').write_text('upstream')
+        self.write(name + '/vterm-module.so', 'old native module')
+        identifier = self.install(backup=True)
+        self.assertEqual((self.home / name).resolve(), module)
+        self.assertIsNone(self.install())
+        installer.restore(self.home, identifier)
+        self.assertFalse((self.home / name).is_symlink())
+        self.assertEqual((self.home / name / 'vterm-module.so').read_text(), 'old native module')
+
+    def test_uninitialized_submodule_stops_before_writes(self):
+        (self.repo / '.gitmodules').write_text('[submodule "vterm"]\npath = emacstools/emacs-libvterm\n')
+        with self.assertRaisesRegex(installer.InstallError, 'submodule update'):
+            self.install()
+        self.assertEqual(list(self.home.iterdir()), [])
+
     def test_fresh_install_links_assets_seeds_custom_and_is_repeatable(self):
         identifier = self.install()
         self.assertEqual((self.home / '.emacs').resolve(), self.repo / '.emacs')
