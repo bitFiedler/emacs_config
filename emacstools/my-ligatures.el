@@ -7,7 +7,7 @@
       (add-to-list 'load-path checkout))))
 (require 'ligature)
 (require 'font-lock)
-(require 'font-lock)
+(require 'seq)
 
 (defgroup my/ligatures nil
   "Display ligatures with the configured editing font."
@@ -52,6 +52,67 @@ Run `my/apply-ligatures' after changing the value. Fractional spacing
 is intended for graphical Emacs; terminals may round its width."
   :type 'number :group 'my/ligatures)
 
+(defcustom my/ligatures-in-c-comments nil
+  "Whether C/C++ comments may use ligature shaping and arrow gaps.
+Comment colors are always preserved, regardless of this option.
+Run `my/apply-ligatures' after changing this option."
+  :type 'boolean :group 'my/ligatures)
+
+(defun my/ligatures--face-inherits-p (face bases &optional seen)
+  "Whether FACE inherits one of BASES, without following inheritance cycles."
+  (cond
+   ((memq face bases) t)
+   ((and (symbolp face) (facep face) (not (memq face seen)))
+    (my/ligatures--face-inherits-p (face-attribute face :inherit nil) bases
+                                  (cons face seen)))
+   ((listp face)
+    (seq-some (lambda (item) (my/ligatures--face-inherits-p item bases seen)) face))))
+
+(defun my/ligatures--context-p (start end slot faces)
+  "Recognize START..END using syntax SLOT or any inherited FACES."
+  (save-match-data
+    (save-excursion
+      (or (nth slot (syntax-ppss start))
+          (nth slot (syntax-ppss end))
+          (let ((position start) found)
+            (while (and (< position end) (not found))
+              (setq found
+                    (or (my/ligatures--face-inherits-p
+                         (get-text-property position 'face) faces)
+                        (my/ligatures--face-inherits-p
+                         (get-text-property position 'font-lock-face) faces)))
+              (setq position (next-property-change position nil end)))
+            found)))))
+
+(defun my/ligatures--comment-p (start end)
+  "Recognize comments by syntax or inherited comment/documentation faces."
+  (my/ligatures--context-p start end 4
+                          '(font-lock-comment-face font-lock-comment-delimiter-face
+                            font-lock-doc-face font-lock-doc-markup-face)))
+
+(defun my/ligatures--string-p (start end)
+  "Recognize strings by syntax or inherited string faces in any mode."
+  (my/ligatures--context-p start end 3 '(font-lock-string-face)))
+
+(defun my/ligatures--c-comment-p (start end)
+  "Whether START..END belongs to a C/C++ comment, including its opener."
+  (and (not my/ligatures-in-c-comments)
+       (derived-mode-p 'c-mode 'c++-mode 'c-ts-mode 'c++-ts-mode 'objc-mode)
+       (save-match-data
+         (save-excursion
+           ;; Looking past two characters includes /* and // delimiters.
+           (or (nth 4 (syntax-ppss start))
+               (nth 4 (syntax-ppss (min end (+ start 2)))))))))
+
+(defun my/ligatures--compose (original function from to font string direction)
+  "Suppress configured ASCII ligatures inside buffer C/C++ comments."
+  (unless (and (null string)
+               (eq function 'font-shape-gstring)
+               (my/ligatures--c-comment-p from to)
+               (member (buffer-substring-no-properties from to)
+                       my/ligature-sequences))
+    (funcall original function from to font string direction)))
+
 (defvar-local my/ligatures--arrow-regexp nil
   "Regexp matching an enabled arrow followed immediately by a word.")
 
@@ -66,12 +127,14 @@ is intended for graphical Emacs; terminals may round its width."
         (goto-char start)
         (while (re-search-forward my/ligatures--arrow-regexp end t)
           (let* ((position (match-beginning 1))
-                 (gap (make-overlay position (1+ position))))
-            (overlay-put gap 'my/ligature-gap t)
-            (overlay-put gap 'evaporate t)
-            (overlay-put gap 'before-string
-                         (propertize " " 'display
-                                     `(space :width ,my/ligature-arrow-gap))))))))
+                 (gap (unless (my/ligatures--c-comment-p (match-beginning 0) (match-end 0))
+                        (make-overlay position (1+ position)))))
+            (when gap
+              (overlay-put gap 'my/ligature-gap t)
+              (overlay-put gap 'evaporate t)
+              (overlay-put gap 'before-string
+                           (propertize " " 'display
+                                       `(space :width ,my/ligature-arrow-gap)))))))))
   ;; This matcher manages overlays; it does not apply a text face.
   nil)
 
@@ -95,8 +158,10 @@ wrapper keeps Eglot's later semantic operator face from taking precedence."
           (when my/ligatures--style-regexp
             (goto-char begin)
             (while (re-search-forward my/ligatures--style-regexp finish t)
-              (add-face-text-property (match-beginning 0) (match-end 0)
-                                      'my/ligature-symbol)))
+              (unless (or (my/ligatures--comment-p (match-beginning 0) (match-end 0))
+                          (my/ligatures--string-p (match-beginning 0) (match-end 0)))
+                (add-face-text-property (match-beginning 0) (match-end 0)
+                                        'my/ligature-symbol))))
           (when my/ligatures--arrow-regexp
             (goto-char begin)
             (my/ligatures--space-matcher finish)))))
@@ -106,6 +171,9 @@ wrapper keeps Eglot's later semantic operator face from taking precedence."
   "Refresh this buffer's final ligature styling and display-only arrow spacing."
   (remove-function (local 'font-lock-fontify-region-function)
                    #'my/ligatures--fontify-after)
+  (remove-function (local 'auto-composition-function) #'my/ligatures--compose)
+  (when ligature-mode
+    (add-function :around (local 'auto-composition-function) #'my/ligatures--compose))
   (when my/ligatures--font-lock-keywords
     (font-lock-remove-keywords nil my/ligatures--font-lock-keywords)
     (setq my/ligatures--font-lock-keywords nil))
@@ -121,8 +189,8 @@ wrapper keeps Eglot's later semantic operator face from taking precedence."
       (setq my/ligatures--style-regexp (regexp-opt my/ligature-sequences)))
     (when (> my/ligature-arrow-gap 0)
       (let ((arrows (delq nil (mapcar (lambda (arrow)
-                                       (and (member arrow my/ligature-sequences) arrow))
-                                     '("->" "->>" "<-" "<->" "=>" "<=>")))))
+					(and (member arrow my/ligature-sequences) arrow))
+                                      '("->" "->>" "<-" "<->" "=>" "<=>")))))
         (when arrows
           (setq my/ligatures--arrow-regexp
                 (concat (regexp-opt arrows) "\\(\\sw\\|\\s_\\)")))))

@@ -224,14 +224,14 @@
   {
     "source": "emacstools/my-ligatures.el",
     "destination": "emacstools/my-ligatures.el",
-    "source_sha256": "2cf0f57543b49fb1fcd77925af0c3f83c0399570952bbd2027953a731b3fe017",
-    "export_sha256": "2cf0f57543b49fb1fcd77925af0c3f83c0399570952bbd2027953a731b3fe017"
+    "source_sha256": "4eaa347979587b3490aae6a7cafa98a8d3e023120bcf284237e130e914ff0e75",
+    "export_sha256": "4eaa347979587b3490aae6a7cafa98a8d3e023120bcf284237e130e914ff0e75"
   },
   {
     "source": "emacstools/my-ligatures-tests.el",
     "destination": "emacstools/my-ligatures-tests.el",
     "source_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393",
-    "export_sha256": "0c170890c0b820f5cc5198b043860fdce93205553534d03ef03a5dc4a66c5393"
+    "export_sha256": "b1c0402edd3c5796e7b4dc788665007cc69d802cd4bb1d5e41fe0757eb17c757"
   },
   {
     "source": "emacstools/ascii-table.el",

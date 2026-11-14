@@ -54,6 +54,8 @@ These instructions apply to this repository. They record the owner's preferences
 
 ## Ligatures
 
+- In every mode, ligatures inside comments and strings must keep their normal syntax color/weight, never the special light-gray/bold operator face. Recognize comment/string syntax and comment/documentation/string faces, including inherited faces.
+- C/C++ comments, including `/* ... */` and repeated-star banners, should have no ligatures, ligature styling or arrow gaps by default. Preserve their normal syntax colors and ligatures in code.
 - Keep the **full** configured JetBrains Mono ligature set. The temporary arrows-only experiment was reverted.
 - Style configured ligature sequences **bold, light gray `#D0D0D0`**. Pure white was tried and softened. Keep the color/weight customizable.
 - Preserve this appearance after Eglot semantic fontification; do not disable semantic highlighting or code actions to achieve it.
