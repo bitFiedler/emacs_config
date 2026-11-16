@@ -104,11 +104,23 @@ Run `my/apply-ligatures' after changing this option."
            (or (nth 4 (syntax-ppss start))
                (nth 4 (syntax-ppss (min end (+ start 2)))))))))
 
+(defun my/ligatures--org-heading-marker-p (start end)
+  "Whether START..END overlaps the leading stars of an Org heading."
+  (and (derived-mode-p 'org-mode)
+       (save-match-data
+         (save-excursion
+           (goto-char start)
+           (beginning-of-line)
+           (and (looking-at "\\(\\*+\\)[ \t]")
+                (< start (match-end 1))
+                (> end (match-beginning 1)))))))
+
 (defun my/ligatures--compose (original function from to font string direction)
-  "Suppress configured ASCII ligatures inside buffer C/C++ comments."
+  "Suppress configured ligatures in C/C++ comments and Org heading markers."
   (unless (and (null string)
                (eq function 'font-shape-gstring)
-               (my/ligatures--c-comment-p from to)
+               (or (my/ligatures--c-comment-p from to)
+                   (my/ligatures--org-heading-marker-p from to))
                (member (buffer-substring-no-properties from to)
                        my/ligature-sequences))
     (funcall original function from to font string direction)))
@@ -158,7 +170,8 @@ wrapper keeps Eglot's later semantic operator face from taking precedence."
           (when my/ligatures--style-regexp
             (goto-char begin)
             (while (re-search-forward my/ligatures--style-regexp finish t)
-              (unless (or (my/ligatures--comment-p (match-beginning 0) (match-end 0))
+              (unless (or (derived-mode-p 'org-mode)
+                          (my/ligatures--comment-p (match-beginning 0) (match-end 0))
                           (my/ligatures--string-p (match-beginning 0) (match-end 0)))
                 (add-face-text-property (match-beginning 0) (match-end 0)
                                         'my/ligature-symbol))))

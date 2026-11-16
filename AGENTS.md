@@ -54,6 +54,7 @@ These instructions apply to this repository. They record the owner's preferences
 
 ## Ligatures
 
+- Org ligatures must preserve surrounding line colors/weight. Never shape leading heading stars or override hidden-marker/bullet styling, including Org Superstar composition.
 - In every mode, ligatures inside comments and strings must keep their normal syntax color/weight, never the special light-gray/bold operator face. Recognize comment/string syntax and comment/documentation/string faces, including inherited faces.
 - C/C++ comments, including `/* ... */` and repeated-star banners, should have no ligatures, ligature styling or arrow gaps by default. Preserve their normal syntax colors and ligatures in code.
 - Keep the **full** configured JetBrains Mono ligature set. The temporary arrows-only experiment was reverted.
