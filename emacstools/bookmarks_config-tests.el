@@ -129,4 +129,21 @@
         (should (equal margins (window-margins)))
         (should (eq (face-attribute 'my/bookmark-terminal-marker :weight) 'normal))))))
 
+(ert-deftest my/bookmarks-full-line-option-updates-existing-bookmarks ()
+  (my/bookmarks-test-window
+    (let* ((bookmark (bm-bookmark-add))
+           (bounds (cons (overlay-start bookmark) (overlay-end bookmark)))
+           (source (buffer-string)))
+      (unwind-protect
+          (dolist (enabled '(nil t))
+            (let ((my/bookmark-highlight-full-line enabled))
+              (my/bookmarks-refresh-appearance)
+              (dolist (face '(bm-face bm-persistent-face))
+                (should (eq (face-attribute face :extend) enabled))
+                (should (eq (face-attribute face :extend t) enabled)))
+              (should (eq (bm-bookmark-at (point-min)) bookmark))
+              (should (equal (cons (overlay-start bookmark) (overlay-end bookmark)) bounds))
+              (should (equal source (buffer-string)))))
+        (my/bookmarks-refresh-appearance)))))
+
 (ert-run-tests-batch-and-exit)

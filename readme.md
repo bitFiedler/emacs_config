@@ -1012,6 +1012,7 @@ Terminal Emacs has no graphical fringe. It displays the **actual Nerd Font ribbo
 | Option / behavior | Current value |
 |---|---|
 | `my/bookmark-orange` | `DarkOrange1`, standard RGB `#FF7F00`, the original GUI orange |
+| `my/bookmark-highlight-full-line` | `t`: extend the bookmark background past the last character to the window edge. Set `nil` for text-only highlighting; run `M-x my/bookmarks-refresh-appearance` to update existing bookmarks. Applies to normal/persistent bookmarks and GUI/terminal frames. |
 | `my/bookmark-line-tint` | `0.18`: 18% orange blended into the hl-line background |
 | Bookmark foreground | Unspecified in GUI/256-color/truecolor frames, preserving syntax foreground colors |
 | Fringe/margin marker background | Unspecified; no separate rectangular orange background |
@@ -1034,7 +1035,7 @@ Apply to an active session using `M-:`:
 
 Run `M-x my/bookmarks-refresh-appearance` after changing colors, marker options or hl-line manually. Theme enable and frame creation also refresh existing bookmark overlays. Window changes maintain the terminal markers automatically. The keys remain `F2` toggle, `C-F2` next, `S-F2` previous, and `C-S-F2` clear the current buffer's bookmarks. Helm BM is declared as a picker integration. Persistent storage and annotation commands are supplied by bm; use `C-h f` / `M-x bm-customize` for its own package options.
 
-Validation: nine ERT checks cover display-independent tint calculation, high/low-color terminal faces, GUI fringe preservation, terminal ribbon/window ownership, unchanged buffer text and modified state, margin restoration, window-buffer switches, marker movement after edits, disabling markers, repeat loading and unchanged window body width/margins when toggling bookmarks. Isolated real `emacs -nw` sessions confirmed U+F02E in the left margin with line numbers in both truecolor and 256-color terminals; the latter emits warm-orange palette index 208 for the ribbon. A real-terminal toggle check also confirmed an unchanged one-column margin and text-area width before adding, while displaying, and after removing a bookmark.
+Validation: ten ERT checks cover configurable full-width/text-only highlighting on existing bookmarks, display-independent tint calculation, high/low-color terminal faces, GUI fringe preservation, terminal ribbon/window ownership, unchanged buffer text and modified state, margin restoration, window-buffer switches, marker movement after edits, disabling markers, repeat loading and unchanged window body width/margins when toggling bookmarks. Isolated real `emacs -nw` sessions confirmed U+F02E in the left margin with line numbers in both truecolor and 256-color terminals; the latter emits warm-orange palette index 208 for the ribbon. An isolated terminal comparison confirmed that full-line mode keeps the bookmark background across the trailing blank columns, while text-only mode resets it after the text. A real-terminal toggle check also confirmed an unchanged one-column margin and text-area width before adding, while displaying, and after removing a bookmark.
 
 ## Breadcrumb and Markdown preview overview
 
@@ -1295,6 +1296,7 @@ Defaults are source expressions, not evaluated live values. The main init may ov
 | `my/session-save-on-exit` | `t` | Whether to save the current session on exit. |
 | `my/editing-line-numbers-excluded-modes` | `'(special-mode dired-mode helm-major-mode comint-mode term-mode vterm-mode eshell-mode image-mode doc-view-mode pdf-view-mode)` | Modes and their descendants that should not display line numbers. |
 | `my/bookmark-orange` | `"DarkOrange1"` | Original bookmark orange, used for the ribbon and line tint. |
+| `my/bookmark-highlight-full-line` | `t`: extend the bookmark background past the last character to the window edge. Set `nil` for text-only highlighting; run `M-x my/bookmarks-refresh-appearance` to update existing bookmarks. Applies to normal/persistent bookmarks and GUI/terminal frames. |
 | `my/bookmark-line-tint` | `0.18` | Orange fraction blended into the hl-line background (0 to 1). |
 | `my/device-font-family` | `"JetBrains Mono"` | Graphical editing font family. |
 | `my/device-font-sizes` | `(("N900D9658" . 9) ("mp-linux" . 11))` | Case-insensitive short hostname → point-size mapping. |

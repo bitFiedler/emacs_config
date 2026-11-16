@@ -33,6 +33,13 @@ opacity remains the same frame alpha used by hl-line.  After changing
 this value, run `my/bookmarks-refresh-appearance'."
   :type 'float :group 'bm)
 
+(defcustom my/bookmark-highlight-full-line t
+  "Extend bookmark highlighting past the last character to the window edge.
+When nil, highlight only the bookmarked line's text. Applies to normal
+and persistent bookmarks in graphical and terminal frames. Run
+`my/bookmarks-refresh-appearance' after changing this option."
+  :type 'boolean :group 'bm)
+
 (defcustom my/bookmark-terminal-markers t
   "Show terminal ribbons and reserve a stable column in editing windows."
   :type 'boolean :group 'bm)
@@ -169,7 +176,8 @@ Use a simple character such as B if the terminal lacks that font."
            (foreground (if limited "black" 'unspecified)))
       (dolist (face '(bm-face bm-persistent-face))
         (set-face-attribute face frame :background background :foreground foreground
-                            :box nil :inverse-video nil))
+                            :box nil :inverse-video nil
+                            :extend my/bookmark-highlight-full-line))
       (dolist (face '(bm-fringe-face bm-fringe-persistent-face my/bookmark-terminal-marker))
         (set-face-attribute face frame
                             :foreground (if limited my/bookmark-terminal-low-color orange)

@@ -65,6 +65,7 @@ These instructions apply to this repository. They record the owner's preferences
 
 ## Bookmarks
 
+- Bookmark backgrounds should cover the whole line to the window edge by default. Keep this configurable with `my/bookmark-highlight-full-line`; refreshing must update existing and persistent bookmarks without moving text or markers.
 - Preserve the existing orange (`DarkOrange1`, standard RGB `#FF7F00`) and subtle hl-line-like tint rather than a large opaque highlight. Resolve RGB colors before terminal palette approximation.
 - Use the Nerd Font ribbon **nf-fa-bookmark, U+F02E**. GUI uses its fringe bitmap; terminal windows use the actual glyph on the left.
 - Terminal markers should be compact: **normal weight, one character column, no extra padding**. Reuse existing left margins. Keep that column stable in editing windows so bookmark addition/removal does not shift code or line numbers.
