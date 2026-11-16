@@ -74,7 +74,7 @@ def submodule_sources(repo):
 def make_plan(repo, home):
     sources = [repo / '.emacs', repo / '.emacs.d/early-init.el']
     sources += sorted(p for p in (repo / 'emacstools').iterdir()
-                      if p.is_file() and p.suffix in ('.el', '.cjs')
+                      if p.is_file() and p.suffix in ('.el', '.cjs', '.py')
                       and not p.name.endswith('-tests.el'))
     sources += sorted(p for p in (repo / 'emacstools/assets').iterdir()
                       if p.is_file() and p.suffix in ('.css', '.js', '.html', '.woff2'))

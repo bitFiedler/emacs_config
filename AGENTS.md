@@ -91,6 +91,7 @@ These instructions apply to this repository. They record the owner's preferences
 - Deadgrep defaults to recursive search and exposes a recursive on/off control. Preserve matches when ripgrep reports permission failures, keep errors understandable, and retain result/error hiding with `z`, `u` and `U`.
 - Syslog `time=` values use timestamp styling; `msg="..."` values support multiline strings. Every new timestamped record must reset quote state so an unfinished message cannot color following records as one string.
 - YAML scalar/script handling should not make most of a CI file appear string-colored. Preserve the existing targeted font-lock integration.
+- For container-based LEO clangd, select the running container by configured image and exact host checkout mount, not a generated container name or first image match. Fail clearly on missing/duplicate matches; preserve clean LSP stdin/stdout.
 - Limit repeated Eglot startup failures to **10 attempts**. Avoid restart loops across projects/languages and unintended reconnection when navigating to library stubs.
 - Clipboard integration should read fresh clipboard contents, normalize CRLF, report timeouts and check tool availability. Enable wl-copy/wl-paste support based on installed tools and display capabilities rather than assuming every device has them.
 - Keep terminal/WSL startup fast. Avoid repeated slow executable probes through mounted Windows directories during startup. Package upgrade checks should be weekly rather than noisy on every launch, with the next eligible launch handling elapsed time.

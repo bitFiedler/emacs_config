@@ -24,6 +24,7 @@ class InstallerTests(unittest.TestCase):
         for name, text in {'.emacs': 'new init', '.emacs.d/early-init.el': 'early init',
                            '.emacs.d/custom.el': 'custom seed', 'emacstools/my-personal.el': 'personal module',
                            'emacstools/my-personal-tests.el': 'test suite',
+                           'emacstools/my-docker-clangd.py': 'launcher',
                            'emacstools/assets/theme.css': 'theme'}.items():
             p = self.repo / name
             p.parent.mkdir(parents=True, exist_ok=True)
@@ -73,6 +74,8 @@ class InstallerTests(unittest.TestCase):
         self.assertFalse((self.home / '.emacs.d/custom.el').is_symlink())
         self.assertEqual((self.home / '.emacs.d/custom.el').read_text(), 'custom seed')
         self.assertFalse((self.home / 'emacstools/my-personal-tests.el').exists())
+        self.assertEqual((self.home / 'emacstools/my-docker-clangd.py').resolve(),
+                         self.repo / 'emacstools/my-docker-clangd.py')
         self.assertIsNone(self.install())
         self.assertEqual(len(installer.sessions(self.home)), 1)
         installer.restore(self.home, 'latest')

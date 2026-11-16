@@ -31,7 +31,7 @@ The configuration expects `~/emacstools` and `~/.emacs.d`. Run `python3 install.
 
 ## Installing linked configuration and recovering backups
 
-Use the repository as the authoritative copy of your personal configuration. The standard-library-only **Python 3** installer creates missing directories and individual absolute symlinks for `.emacs`, `.emacs.d/early-init.el`, personal top-level `.el`/`.cjs` modules, Markdown assets and initialized submodule directories under `~/emacstools/`. Tests and `legacy/` are not installed. Keep the checkout at its installed location; moving it breaks absolute links until the installer is run again from the new location.
+Use the repository as the authoritative copy of your personal configuration. The standard-library-only **Python 3** installer creates missing directories and individual absolute symlinks for `.emacs`, `.emacs.d/early-init.el`, personal top-level `.el`/`.cjs`/`.py` modules, Markdown assets and initialized submodule directories under `~/emacstools/`. Tests and `legacy/` are not installed. Keep the checkout at its installed location; moving it breaks absolute links until the installer is run again from the new location.
 
 Save your buffers and exit Emacs before installation or recovery. From the repository root:
 
@@ -894,6 +894,8 @@ Apply the saved bindings to the current session with `M-:`:
 
 ## Eglot and language servers
 
+
+
 The Eglot declaration runs `eglot-ensure` from C/C++ classic and TS, Python classic and TS, Sh and Bash TS mode hooks. It connects asynchronously (`eglot-sync-connect nil`), shuts down servers when no managed buffers remain (`eglot-autoshutdown t`), and extends the originating server to xref targets (`eglot-extend-to-xref t`). Opening standard-library stubs should therefore reuse the originating project server rather than requiring a new project session solely because the target is outside the project.
 
 | Modes | Configured server invocation |
@@ -907,6 +909,43 @@ The external executables/packages must be available in Emacs's environment. Thes
 `my-eglot-retry-limit.el` keys retries by project plus language/mode group, reuses live/initializing connections and limits server starts to 10 per key. A connection must remain running for 60 seconds before its start budget resets. This avoids Python/clangd buffers in one project causing endless replacement sessions. Budgets and timers live in the current Emacs process, not a persistent disk database.
 
 `M-x my/eglot-reset-retries` clears stopped budgets; then `M-x eglot` explicitly reconnects. `M-x my/eglot-close-exited-event-buffers` closes finished Eglot JSONRPC event buffers containing the exit marker, preserving source buffers, stderr and live-server event buffers. Cleanup is also scheduled after process exit. For normal connection control use `eglot`, `eglot-reconnect`, `eglot-shutdown` and Eglot's buffer-local commands as appropriate.
+
+### Docker clangd selected by image and project mount
+
+`emacstools/my-docker-clangd.py` lets host Emacs use clangd inside an already running build container. It finds candidates by Docker image, verifies the exact configured image name and the host checkout bound at `/leo`, and requires exactly one match. Generated container names may change; no name is stored in the project configuration. Another checkout using the same image is excluded. Missing or duplicate matching containers produce an explicit error on Eglot's stderr rather than choosing an arbitrary container.
+
+For LEO, [the directory-settings example](docs/examples/leo-dir-locals.el) is installed locally as `~/sourcen/leo/leo/.dir-locals.el`. It invokes the Python launcher linked at `~/emacstools/my-docker-clangd.py` with:
+
+```sh
+python3 ~/emacstools/my-docker-clangd.py \
+  --image docker.gde.kapschtraffic.com/leo/leo:trixie \
+  --host-root ~/sourcen/leo/leo
+```
+
+The installer links personal Python helpers along with Lisp modules. Adjust the example's absolute paths for another user/home/checkout. The `c-ts-base-mode` entry covers both `c-ts-mode` and `c++-ts-mode` inside that project; other projects retain their existing Eglot settings. Classic modes can use equivalent directory-local entries if required.
+
+The container must already be running, have clangd installed and contain a valid compilation database. In the LEO container, generate it using the existing build cache:
+
+```sh
+cmake -S /leo/tools -B /leo/images/scratch/tools_build \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+```
+
+The launcher defaults to `clangd`, container root `/leo` and database directory `/leo/images/scratch/tools_build`. It supplies `--background-index`, `--clang-tidy=false`, `--header-insertion=never`, and the host/container path mapping. Override `--container-root`, `--database` (absolute container directory), or `--clangd` when required; additional clangd options follow `--`. The database and compiler/dependency paths stay inside the container. Docker access must work from graphical Emacs's environment too.
+
+To inspect the selection without starting a server:
+
+```sh
+python3 ~/emacstools/my-docker-clangd.py \
+  --image docker.gde.kapschtraffic.com/leo/leo:trixie \
+  --host-root ~/sourcen/leo/leo --print-command
+```
+
+Discovery reads no protocol input and uses only image/state/mount metadata. Normal mode writes no launcher output to stdout; it replaces itself with `docker exec -i` without a TTY so LSP traffic and exit status pass through. Docker discovery errors go to stderr. The helper does not start, install into or modify containers. A running server is not automatically migrated when its container stops; start the replacement container and reconnect Eglot. Duplicate matches must be stopped or otherwise resolved first. Discovery uses Docker's current image tag, so after rebuilding/retagging the image, start a container from the intended image version.
+
+After changing the directory settings: `M-x eglot-shutdown` for the old connection, `M-x normal-mode` to re-read settings (approve the reviewed local-variable prompt), then `M-x eglot` if it did not start automatically. If the retry budget was exhausted, first run `M-x my/eglot-reset-retries`. Existing connections need a fresh launch to pick up the new command.
+
+Validation: unit tests cover image/mount/state matching, duplicate/missing containers, Docker permission errors, preserving stdin and shell-free handoff. A real initialization/shutdown through the launcher succeeded against the LEO build container. No full live Emacs init was loaded for testing.
 
 ## Syslog highlighting
 
