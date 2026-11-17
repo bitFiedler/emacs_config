@@ -15,6 +15,14 @@ root.  Commands are executable project configuration: review local-variable
 prompts before accepting them.  With nil, offer basic Make/CMake tasks."
   :type '(repeat (cons string plist)) :group 'my/project-build)
 (put 'my/project-build-tasks 'risky-local-variable t)
+(defcustom my/project-build-root nil
+  "Optional absolute root for this project's build tasks.
+Use in directory-local settings when sources are in a Git submodule but the
+build scripts and Docker bind mount belong to a parent checkout.  With nil,
+use the project.el root.  This does not change Eglot's project selection."
+  :type '(choice (const :tag "Use project.el" nil) directory)
+  :group 'my/project-build)
+(put 'my/project-build-root 'risky-local-variable t)
 (defcustom my/project-build-python "python3"
   "Python executable used for Docker task discovery and execution."
   :type 'string :group 'my/project-build)
@@ -31,6 +39,12 @@ prompts before accepting them.  With nil, offer basic Make/CMake tasks."
 (defun my/project-build--project-root ()
   "Return the current project's canonical root."
   (or my/project-build--root
+      (when my/project-build-root
+        (unless (and (stringp my/project-build-root)
+                     (file-name-absolute-p my/project-build-root)
+                     (file-directory-p my/project-build-root))
+          (user-error "my/project-build-root must be an existing absolute directory"))
+        (file-name-as-directory (file-truename my/project-build-root)))
       (when-let* ((project (project-current nil)))
         (file-name-as-directory (file-truename (project-root project))))
       (user-error "Open a file in a project first")))

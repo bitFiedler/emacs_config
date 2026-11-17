@@ -16,6 +16,20 @@
           (should-error (my/project-build--command root '("Bad" :command "make" :docker-image "image"))))
       (delete-directory root t))))
 
+(ert-deftest my/build-root-can-override-a-source-submodule ()
+  (let* ((parent (make-temp-file "build parent " t))
+         (my/project-build-root parent)
+         (my/project-build--root nil))
+    (unwind-protect
+        (cl-letf (((symbol-function 'project-current)
+                   (lambda (&rest _) (ert-fail "Override should bypass submodule discovery"))))
+          (should (equal (my/project-build--project-root) (file-name-as-directory (file-truename parent))))
+          (let ((my/project-build-root "relative"))
+            (should-error (my/project-build--project-root) :type 'user-error))
+          (let ((my/project-build-root (expand-file-name "missing" parent)))
+            (should-error (my/project-build--project-root) :type 'user-error)))
+      (delete-directory parent t))))
+
 (ert-deftest my/build-preview-does-not-start-a-process ()
   (let ((root (file-name-as-directory temporary-file-directory)))
     (cl-letf (((symbol-function 'compilation-start) (lambda (&rest _) (ert-fail "Preview started build"))))

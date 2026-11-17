@@ -27,7 +27,7 @@ Reloading only the module upgrades already open/running build buffers without re
 (load-file "~/emacstools/my-project-build.el")
 ```
 
-The scrolling regression runs in a real isolated terminal Emacs after its first redisplay, because batch Emacs has no reliable rendered window geometry. It verifies independent windows, pause/resume, repeated pause, and rapid output bursts arriving before redisplay. The five non-rendering ERT checks run in batch; all six checks passed in their respective environments.
+The scrolling regression runs in a real isolated terminal Emacs after its first redisplay, because batch Emacs has no reliable rendered window geometry. It verifies independent windows, pause/resume, repeated pause, and rapid output bursts arriving before redisplay. The six non-rendering ERT checks run in batch; all seven checks passed in their respective environments, including the parent-root override regression.
 
 ## Per-project configuration
 
@@ -46,6 +46,14 @@ Merge a `nil` section into the project's existing `.dir-locals.el` (keep existin
 ```
 
 Choose tasks appropriate to the project; this example shows alternatives. Each task is `(NAME :command SHELL-COMMAND ...)`, with an optional `:directory` relative to the project root. That directory must already exist. The project is located using built-in `project.el`; a Git checkout needs no additional project package. Task settings contain executable commands and are deliberately treated as risky local variables: review and accept Emacs's local-variable prompt. They are not globally marked safe.
+
+For sources inside a Git submodule whose build scripts/Docker mount belong to a parent checkout, set `my/project-build-root` in the same `nil` directory-local section:
+
+```elisp
+(my/project-build-root . "/absolute/path/to/parent-checkout")
+```
+
+This optional existing absolute directory overrides only the build task root. It leaves Eglot and other `project.el` commands unchanged. The parent `.dir-locals.el` can then supply tasks inherited by source files inside the submodule. Review local-variable settings and adjust the path on another device. With nil, normal project-root discovery remains the default.
 
 With no configured task list, a root `CMakeCache.txt` offers `cmake --build .`; otherwise a root `Makefile` offers `make -j2`. The proof of concept does not infer CMake build directories, cross-compilers, U-Boot board configurations or packaging scripts. Configure those explicitly.
 
