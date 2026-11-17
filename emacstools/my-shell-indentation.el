@@ -5,8 +5,43 @@
 
 (defgroup my/shell-indentation nil "Predictable shell indentation." :group 'sh-script)
 (defcustom my/shell-indent-offset 4
-  "Default number of spaces per shell indentation level."
+  "Default shell indentation step in display columns."
   :type 'integer :group 'my/shell-indentation)
+
+(defcustom my/shell-indent-tabs 'detect
+  "Whether shell indentation uses tabs or spaces.
+With `detect', use the majority of indented code lines in the existing file.
+Blank lines, comments and multiline string contents do not vote.  A tab in
+leading whitespace counts as tab indentation, including tabs plus alignment
+spaces.  Ties and files without indented code default to spaces.
+Set to t to force tabs or nil to force spaces.  Explicit directory/file-local
+indent-tabs-mode settings take precedence."
+  :type '(choice (const :tag "Detect from existing code" detect)
+                 (const :tag "Use tabs" t) (const :tag "Use spaces" nil))
+  :group 'my/shell-indentation)
+
+(defun my/shell-indent--detect-tabs ()
+  "Return non-nil when indented shell code predominantly uses tabs."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (let ((tabs 0) (spaces 0))
+        (while (re-search-forward "^\\([ \t]+\\)[^ \t\n]" nil t)
+          (let* ((prefix (match-string-no-properties 1))
+                 (start (match-end 1))
+                 (comment (eq (char-after start) ?#))
+                 (syntax (save-match-data (save-excursion (syntax-ppss start)))))
+            (unless (or comment (nth 3 syntax) (nth 4 syntax))
+              (if (string-match-p "\t" prefix)
+                  (setq tabs (1+ tabs))
+                (setq spaces (1+ spaces))))))
+        (> tabs spaces)))))
+
+(defun my/shell-indent--explicit-p (variable)
+  "Whether VARIABLE has an explicit directory/file-local setting."
+  (or (assq variable file-local-variables-alist)
+      (assq variable dir-local-variables-alist)))
 
 (defun my/shell-indent-apply ()
   "Restore normal shell indentation instead of rules learned from broken layout.
@@ -18,9 +53,15 @@ indentation variables can still override these mode-hook defaults."
     ;; dtrt-indent delegates shell indentation guessing to smie-config-guess.
     ;; Merely turning dtrt-indent off does not remove its learned SMIE rules.
     (setq-local smie-config--buffer-local nil)
-    (setq-local sh-basic-offset my/shell-indent-offset)
-    (setq-local indent-tabs-mode nil)
-    (setq-local tab-width my/shell-indent-offset)))
+    (unless (my/shell-indent--explicit-p 'sh-basic-offset)
+      (setq-local sh-basic-offset my/shell-indent-offset))
+    (unless (my/shell-indent--explicit-p 'indent-tabs-mode)
+      (setq-local indent-tabs-mode
+                  (if (eq my/shell-indent-tabs 'detect)
+                      (my/shell-indent--detect-tabs)
+                    my/shell-indent-tabs)))
+    (unless (my/shell-indent--explicit-p 'tab-width)
+      (setq-local tab-width my/shell-indent-offset))))
 
 (defun my/shell-indent--guard-dtrt (original &rest arguments)
   "Keep automatic indentation guessing out of shell buffers.

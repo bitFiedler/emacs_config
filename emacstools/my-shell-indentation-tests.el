@@ -51,4 +51,49 @@
                    (lambda (&rest args) (setq called args) 'result) 1) 'result))
       (should (equal called '(1))))))
 
+(ert-deftest my/shell-indent-detects-space-and-tab-files ()
+  (dolist (mode '(sh-mode bash-ts-mode))
+    (when (or (eq mode 'sh-mode) (treesit-language-available-p 'bash))
+      (dolist (tabs '(nil t))
+        (with-temp-buffer
+          (insert (if tabs
+                      "if true; then\n\techo one\n\tif true; then\n\t\techo two\n\tfi\nfi\n"
+                    "if true; then\n    echo one\n    if true; then\n        echo two\n    fi\nfi\n"))
+          (funcall mode)
+          (should (eq indent-tabs-mode tabs))
+          (should-not smie-config--buffer-local)
+          (indent-region (point-min) (point-max))
+          (goto-char (point-min)) (forward-line 1)
+          (should (looking-at (if tabs "\techo" "    echo"))))))))
+
+(ert-deftest my/shell-indent-detection-ignores-strings-and-comments ()
+  (with-temp-buffer
+    (insert "value='\n\tquoted one\n\tquoted two\n\tquoted three\n'\nif true; then\n    echo value\n    # comment\n\t# another comment\nfi\n")
+    (sh-mode)
+    (should-not indent-tabs-mode)))
+
+(ert-deftest my/shell-indent-detection-tie-and-explicit-style ()
+  (with-temp-buffer
+    (insert "if true; then\n\techo tabs\n    echo spaces\nfi\n")
+    (sh-mode)
+    (should-not indent-tabs-mode)
+    (let ((my/shell-indent-tabs t))
+      (my/shell-indent-apply)
+      (should indent-tabs-mode))
+    (setq-local file-local-variables-alist '((indent-tabs-mode . nil) (tab-width . 8)))
+    (setq-local indent-tabs-mode nil tab-width 8)
+    (let ((my/shell-indent-tabs t))
+      (my/shell-indent-apply)
+      (should-not indent-tabs-mode)
+      (should (= tab-width 8)))))
+
+(ert-deftest my/shell-indent-leaves-interactive-shell-mode-alone ()
+  (require 'shell)
+  (with-temp-buffer
+    (shell-mode)
+    (setq-local indent-tabs-mode t tab-width 8)
+    (my/shell-indent-apply)
+    (should indent-tabs-mode)
+    (should (= tab-width 8))))
+
 (ert-run-tests-batch-and-exit)
