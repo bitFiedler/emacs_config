@@ -36,6 +36,7 @@ These instructions apply to this repository. They record the owner's preferences
 
 - Update `readme.md` when changing behavior, shortcuts, options, dependencies or installation. It is the consolidated customization/module reference, based on `emacs-customizations-and-modules.md`.
 - For C/C++ compiler databases, prefer Bear for Make-based projects and CMake native export with `-DCMAKE_EXPORT_COMPILE_COMMANDS=ON` for CMake projects. Linux Kbuild database generation is an optional alternative, not the default workflow.
+- General Eglot setup, public open-source references and generic native/Docker examples may be documented under this repository's `docs/`. Keep private registry names, internal project paths and deployment examples in the internal documentation folder.
 - Keep internal project deployment guides and examples outside this repository: use `~/Documents/codex/emacs/` for guides and `~/Documents/codex/emacs/docs/examples/<project-name>/` for examples. Use the actual project name (for example `usb-ibb-driver`), distinguishing it from container mount paths (such as `/usb-ibb`).
 - Maintain focused guides under `docs/` when their feature changes. The user's documentation folder is `~/Documents/codex/emacs`, not `~/.codex`; follow the backup rule for files outside Git.
 - Keep this preferences file aligned with explicit preference changes; detailed implementation and command inventories belong in the README/guides.

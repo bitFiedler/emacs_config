@@ -894,6 +894,8 @@ Apply the saved bindings to the current session with `M-:`:
 
 ## Eglot and language servers
 
+See [Eglot C/C++ setup](docs/eglot-c-cpp-build-setup.md) for open-source project references, native and Docker configuration, Bear for Make, CMake compiler-database export, navigation and troubleshooting. [Runnable examples](docs/examples/eglot-build-databases/README.md) cover all four native/Docker × Make/CMake combinations. Internal project deployment guides remain in the private documentation folder.
+
 The Eglot declaration runs `eglot-ensure` from C/C++ classic and TS, Python classic and TS, Sh and Bash TS mode hooks. It connects asynchronously (`eglot-sync-connect nil`), shuts down servers when no managed buffers remain (`eglot-autoshutdown t`), and extends the originating server to xref targets (`eglot-extend-to-xref t`). Opening standard-library stubs should therefore reuse the originating project server rather than requiring a new project session solely because the target is outside the project.
 
 | Modes | Configured server invocation |

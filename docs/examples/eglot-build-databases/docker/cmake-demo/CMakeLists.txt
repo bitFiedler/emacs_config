@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.16)
+project(eglot_database_demo LANGUAGES C)
+add_executable(demo src/main.c src/answer.c)
+target_include_directories(demo PRIVATE include)
+target_compile_features(demo PRIVATE c_std_11)
