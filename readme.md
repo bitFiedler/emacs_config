@@ -894,6 +894,8 @@ Apply the saved bindings to the current session with `M-:`:
 
 ## Eglot and language servers
 
+[U-Boot native/Docker examples](docs/examples/u-boot/README.md) cover public sandbox builds, Bear-wrapped build scripts, Eglot settings, a development Dockerfile and legacy clangd compiler-flag filtering. Internal board deployment details remain in the internal documentation folder.
+
 See [Eglot C/C++ setup](docs/eglot-c-cpp-build-setup.md) for open-source project references, native and Docker configuration, Bear for Make, CMake compiler-database export, navigation and troubleshooting. [Runnable examples](docs/examples/eglot-build-databases/README.md) cover all four native/Docker × Make/CMake combinations. The [upstream Linux kernel walkthrough](docs/examples/linux-kernel/README.md) adds native and Docker kernel setup, Bear capture and a [kernel-development Dockerfile](docs/examples/linux-kernel/docker/Dockerfile). Internal project deployment guides remain in the private documentation folder.
 
 The Eglot declaration runs `eglot-ensure` from C/C++ classic and TS, Python classic and TS, Sh and Bash TS mode hooks. It connects asynchronously (`eglot-sync-connect nil`), shuts down servers when no managed buffers remain (`eglot-autoshutdown t`), and extends the originating server to xref targets (`eglot-extend-to-xref t`). Opening standard-library stubs should therefore reuse the originating project server rather than requiring a new project session solely because the target is outside the project.
@@ -925,6 +927,8 @@ python3 ~/emacstools/my-docker-clangd.py \
 ```
 
 `--print-command` inspects selection without starting clangd. Omit it for normal server operation. Defaults retained for compatibility are container root `/leo` and database directory `/leo/images/scratch/tools_build`; other projects should supply explicit overrides. The container must already have clangd and a valid compilation database with accessible headers/dependencies.
+
+For older servers, repeatable `--remove-compile-flag=-flag` options create a separate analysis database under the mounted checkout’s `.cache/my-docker-clangd/`; the raw database remains unchanged. Only exact flags are removed. The raw database must be inside the project mount. Reconnect after regenerating it. `--print-command` reads/validates the raw database but writes no derived cache.
 
 The helper reads no protocol input during discovery and fetches only image/state/mount metadata. It replaces itself with `docker exec -i` without a TTY, preserving raw LSP stdin/stdout and exit status. It supplies path mapping, background indexing, disabled clang-tidy and disabled automatic header insertion. It does not start or modify containers. Restart the connection after replacing its container; duplicate matches must be resolved first. Docker discovery uses the current image tag, so start the intended image version after rebuilding/retagging it.
 

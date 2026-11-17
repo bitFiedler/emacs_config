@@ -2,6 +2,7 @@
 import contextlib
 import importlib.util
 import io
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -48,6 +49,28 @@ class DockerClangdTests(unittest.TestCase):
                                subprocess.CalledProcessError(1, ['docker'], stderr='permission denied')):
             with self.assertRaisesRegex(launcher.LauncherError, 'permission denied'):
                 launcher.docker_output(['ps'])
+
+    def test_analysis_database_preserves_source_and_container_paths(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / 'compile_commands.json'
+            entries = [{'directory': '/project', 'file': '/project/a.c',
+                        'arguments': ['gcc', '-fstack-usage', '-c', '/project/a.c']},
+                       {'directory': '/project', 'file': '/project/b.c',
+                        'command': 'gcc -fstack-usage -c /project/b.c'}]
+            raw = json.dumps(entries).encode();source.write_bytes(raw)
+            directory = launcher.analysis_database(root, '/project', '/project', ['-fstack-usage'], write=False)
+            self.assertFalse((root / '.cache').exists())
+            self.assertEqual(directory, launcher.analysis_database(root, '/project', '/project', ['-fstack-usage']))
+            result = json.loads((root / directory.removeprefix('/project/') / 'compile_commands.json').read_text())
+            self.assertEqual(source.read_bytes(), raw)
+            for entry in result:
+                self.assertNotIn('-fstack-usage', entry['arguments'])
+                self.assertEqual(entry['directory'], '/project')
+            with self.assertRaises(launcher.LauncherError):
+                launcher.analysis_database(root, '/project', '/elsewhere', ['-flag'])
+            source.write_text('[]')
+            self.assertNotEqual(directory, launcher.analysis_database(root, '/project', '/project', ['-fstack-usage']))
 
     def test_handoff_uses_selected_id_without_shell_or_tty(self):
         with tempfile.TemporaryDirectory(prefix='project with spaces ') as root:

@@ -1,0 +1,5 @@
+# Analysis only: older clangd versions may not accept these GCC flags.
+CompileFlags:
+  Remove:
+    - '-fstack-usage'
+    - '-fno-toplevel-reorder'

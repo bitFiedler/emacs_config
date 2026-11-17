@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Run clangd in the running Docker container matching an image and project mount."""
 import argparse
+import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import posixpath
 import shlex
 import subprocess
 import sys
+import tempfile
 
 
 class LauncherError(Exception):
@@ -67,6 +69,46 @@ def command(container, host_root, container_root, database, clangd, extra):
             '--background-index', '--clang-tidy=false', '--header-insertion=never', *extra]
 
 
+def analysis_database(host_root, container_root, database, remove_flags, write=True):
+    """Create a derived Bear/CMake database without changing the original."""
+    if not remove_flags:
+        return database
+    try:
+        relative = PurePosixPath(posixpath.normpath(database)).relative_to(container_root)
+    except ValueError as error:
+        raise LauncherError('Flag filtering requires the database inside the project bind mount') from error
+    source = host_root / str(relative) / 'compile_commands.json'
+    raw = source.read_bytes()
+    entries = json.loads(raw)
+    for entry in entries:
+        arguments = entry.get('arguments')
+        if arguments is None:
+            arguments = shlex.split(entry.pop('command'))
+        entry['arguments'] = [arg for arg in arguments if arg not in remove_flags]
+    identity = hashlib.sha256(raw + json.dumps(sorted(remove_flags)).encode()).hexdigest()[:20]
+    relative_cache = Path('.cache/my-docker-clangd') / identity
+    cache = host_root / relative_cache
+    current = host_root
+    for part in relative_cache.parts:
+        current /= part
+        if current.is_symlink():
+            raise LauncherError(f'Analysis cache parent must not be a symlink: {current}')
+    if write:
+        cache.mkdir(parents=True, exist_ok=True, mode=0o700)
+        # Atomic publication prevents a second server from reading partial JSON.
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', dir=cache, delete=False) as stream:
+                temporary = Path(stream.name)
+                json.dump(entries, stream, indent=2)
+                stream.write('\n')
+            temporary.replace(cache / 'compile_commands.json')
+        finally:
+            if temporary is not None:
+                temporary.unlink(missing_ok=True)
+    return posixpath.join(container_root, relative_cache.as_posix())
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--image', required=True)
@@ -74,6 +116,8 @@ def main(argv=None):
     parser.add_argument('--container-root', default='/leo')
     parser.add_argument('--database', help='absolute compilation database directory inside container')
     parser.add_argument('--clangd', default='clangd', help='clangd executable inside container')
+    parser.add_argument('--remove-compile-flag', action='append', default=[],
+                        help='exact compiler flag to omit from a derived analysis database; use --remove-compile-flag=-flag')
     parser.add_argument('--print-command', action='store_true', help='show selected command without starting clangd')
     parser.add_argument('clangd_args', nargs=argparse.REMAINDER, help='additional clangd options after --')
     args = parser.parse_args(argv)
@@ -88,6 +132,8 @@ def main(argv=None):
     extra = args.clangd_args
     if extra[:1] == ['--']:
         extra = extra[1:]
+    database = analysis_database(host_root, container_root, database,
+                                 args.remove_compile_flag, write=not args.print_command)
     argv = command(container, host_root, container_root, database, args.clangd, extra)
     if args.print_command:
         print(shlex.join(argv))
