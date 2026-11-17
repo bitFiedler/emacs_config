@@ -94,6 +94,50 @@
       (when-let* ((visited (get-file-buffer file))) (kill-buffer visited))
       (delete-directory root t))))
 
+(ert-deftest my/build-helm-selection-repeats-exact-command-from-source ()
+  (let* ((root (file-name-as-directory (make-temp-file "build repeat " t)))
+         (my/project-build-root root)
+         (my/project-build--last (make-hash-table :test #'equal))
+         (my/project-build-tasks '(("First" :command "printf first")
+                                   ("Chosen" :command "printf chosen")))
+         (source (generate-new-buffer " *build repeat source*"))
+         (original-require (symbol-function 'require))
+         buffer)
+    (unwind-protect
+        (save-window-excursion
+          (switch-to-buffer source)
+          (setq default-directory root)
+          ;; Exercise the real chooser's candidate/action callbacks.  No Helm
+          ;; installation, firmware compilation or Docker is needed here.
+          (cl-letf (((symbol-function 'require)
+                     (lambda (feature &rest arguments)
+                       (if (eq feature 'helm) t
+                         (apply original-require feature arguments))))
+                    ((symbol-function 'helm-make-source)
+                     (lambda (_name _class &rest properties) properties))
+                    ((symbol-function 'helm)
+                     (lambda (&rest arguments)
+                       (let* ((properties (plist-get arguments :sources))
+                              (task (cdr (assoc "Chosen" (plist-get properties :candidates))))
+                              (action (cdar (plist-get properties :action))))
+                         (funcall action task)))))
+            (call-interactively (lookup-key my/project-build-map (kbd "b"))))
+          (setq buffer (gethash root my/project-build--last))
+          (my/build-test--wait buffer)
+          (with-current-buffer buffer
+            (should (equal (car compilation-arguments) "printf chosen")))
+          ;; Invoke C-c B r from the editing buffer, not the build buffer.
+          (switch-to-buffer source)
+          (call-interactively (lookup-key my/project-build-map (kbd "r")))
+          (my/build-test--wait buffer)
+          (with-current-buffer buffer
+            (should (equal (car compilation-arguments) "printf chosen"))
+            (should (string-match-p "chosen" (buffer-string))))
+          (should (eq buffer (gethash root my/project-build--last))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (kill-buffer source)
+      (delete-directory root t))))
+
 (ert-deftest my/build-path-map-is-local-and-can-be-cleared ()
   (let ((original (copy-tree (default-value 'compilation-transform-file-match-alist))))
     (with-temp-buffer

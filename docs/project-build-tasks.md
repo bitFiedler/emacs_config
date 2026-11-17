@@ -15,6 +15,12 @@
 
 Helm's action menu (`TAB`) also offers **Preview command**. Previews do not contact Docker. Before starting, Emacs offers to save modified files from that project. Builds use distinct buffers named with project, a short root hash and task name; different projects cannot accidentally reuse one another's output. Starting the same active task twice is refused. Repeat operates on the most recent build buffer in the current Emacs session; it is not persisted across restarts.
 
+## Repeat the last selected build
+
+Use `C-c B b` to select a task, then `C-c B r` from a source buffer in the same project to repeat that exact command, flags and working directory. Selecting another task changes the last choice. Make decides what needs rebuilding. `g` instead repeats the task belonging to the displayed build buffer. A running task cannot be started a second time through repeat.
+
+The current session stores the last build buffer for each project. Closing that buffer removes the available repeat target; choose the task again to recreate it. The chooser-to-repeat path is covered by an isolated test that selects an action through the chooser callbacks and invokes the actual `b`/`r` keymap commands from an editing buffer.
+
 ## Live output scrolling
 
 Build windows follow new output by default, including output after compiler errors. Scrolling up into older output pauses following in that window; scrolling back until the live end is visible resumes it. `M->` jumps directly to the end and resumes following. Each window follows independently, so one split can show older output while another follows the same build.
@@ -27,7 +33,7 @@ Reloading only the module upgrades already open/running build buffers without re
 (load-file "~/emacstools/my-project-build.el")
 ```
 
-The scrolling regression runs in a real isolated terminal Emacs after its first redisplay, because batch Emacs has no reliable rendered window geometry. It verifies independent windows, pause/resume, repeated pause, and rapid output bursts arriving before redisplay. The six non-rendering ERT checks run in batch; all seven checks passed in their respective environments, including the parent-root override regression.
+The scrolling regression runs in a real isolated terminal Emacs after its first redisplay, because batch Emacs has no reliable rendered window geometry. It verifies independent windows, pause/resume, repeated pause, and rapid output bursts arriving before redisplay. Eight non-rendering ERT checks now run in batch; the scrolling check runs separately in a terminal. These include parent-root override, auto-start flag selection and the chooser-to-repeat regression.
 
 ## Per-project configuration
 
