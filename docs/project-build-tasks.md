@@ -15,6 +15,20 @@
 
 Helm's action menu (`TAB`) also offers **Preview command**. Previews do not contact Docker. Before starting, Emacs offers to save modified files from that project. Builds use distinct buffers named with project, a short root hash and task name; different projects cannot accidentally reuse one another's output. Starting the same active task twice is refused. Repeat operates on the most recent build buffer in the current Emacs session; it is not persisted across restarts.
 
+## Live output scrolling
+
+Build windows follow new output by default, including output after compiler errors. Scrolling up into older output pauses following in that window; scrolling back until the live end is visible resumes it. `M->` jumps directly to the end and resumes following. Each window follows independently, so one split can show older output while another follows the same build.
+
+The previous `first-error` setting stopped following at the first compiler error. Project build mode now uses live-end following with no automatic jump to the first error. Error navigation remains available through `RET` and `M-g n` / `M-g p`.
+
+Reloading only the module upgrades already open/running build buffers without restarting their modes or processes:
+
+```elisp
+(load-file "~/emacstools/my-project-build.el")
+```
+
+The scrolling regression runs in a real isolated terminal Emacs after its first redisplay, because batch Emacs has no reliable rendered window geometry. It verifies independent windows, pause/resume, repeated pause, and rapid output bursts arriving before redisplay. The five non-rendering ERT checks run in batch; all six checks passed in their respective environments.
+
 ## Per-project configuration
 
 Merge a `nil` section into the project's existing `.dir-locals.el` (keep existing Eglot settings):

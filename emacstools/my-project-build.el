@@ -92,10 +92,54 @@ prompts before accepting them.  With nil, offer basic Make/CMake tasks."
                             (replace-regexp-in-string "\\\\" "\\\\" my/project-build--root t t))
                       (default-value 'compilation-transform-file-match-alist)))))
 
+(defun my/project-build--follow-filter (process output)
+  "Insert OUTPUT from PROCESS, following only windows showing the live end.
+A window scrolled into older output retains its point and scroll position.
+Returning to the bottom resumes following, even without moving point to EOF."
+  (let* ((buffer (process-buffer process))
+         (filter (process-get process 'my/project-build-original-filter))
+         (windows
+          (when (buffer-live-p buffer)
+            (with-current-buffer buffer
+              (mapcar (lambda (window)
+                        (list window (>= (or (window-end window t) 0) (point-max))
+                              (window-point window) (window-start window)))
+                      (get-buffer-window-list buffer nil t))))))
+    (unwind-protect
+        (funcall filter process output)
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (dolist (state windows)
+            (pcase-let ((`(,window ,following ,position ,start) state))
+              (when (and (window-live-p window) (eq (window-buffer window) buffer))
+                (if following
+                    (with-selected-window window
+                      (goto-char (point-max))
+                      ;; Update the viewport immediately: another output chunk
+                      ;; can arrive before redisplay has caught up with point.
+                      (recenter -1))
+                  (set-window-point window position)
+                  (set-window-start window start t))))))))))
+
+(defun my/project-build--install-follow-filter (process)
+  "Wrap PROCESS's output filter once, preserving its normal output handling."
+  (unless (eq (process-filter process) #'my/project-build--follow-filter)
+    (process-put process 'my/project-build-original-filter (process-filter process))
+    (set-process-filter process #'my/project-build--follow-filter)))
+
+(defun my/project-build--setup-scrolling ()
+  "Enable live-end following for this build, including an existing process."
+  (setq-local compilation-scroll-output t)
+  (setq-local compilation-auto-jump-to-first-error nil)
+  (setq-local compilation-auto-jump-to-next nil)
+  (add-hook 'compilation-start-hook #'my/project-build--install-follow-filter nil t)
+  (when-let* ((process (get-buffer-process (current-buffer))))
+    (my/project-build--install-follow-filter process)))
+
 (define-derived-mode my/project-build-compilation-mode compilation-mode "Project-Build"
-  "Compilation mode with buffer-local Docker filename translation."
+  "Compilation mode with Docker paths and pausable live-output following."
   (my/project-build--configure-output)
-  (setq-local compilation-scroll-output 'first-error))
+  (my/project-build--setup-scrolling))
 
 (defun my/project-build--preview (root task)
   "Show TASK's command without running it or contacting Docker."
@@ -175,6 +219,13 @@ Fall back to ordinary completion when Helm is unavailable."
     (define-key map (kbd "r") #'my/project-build-repeat)
     map))
 (global-set-key (kbd "C-c B") my/project-build-map)
+
+;; Reloading this module also upgrades open build buffers without restarting
+;; their modes, losing compiler diagnostics, or interrupting a running build.
+(dolist (buffer (buffer-list))
+  (with-current-buffer buffer
+    (when (derived-mode-p 'my/project-build-compilation-mode)
+      (my/project-build--setup-scrolling))))
 
 (provide 'my-project-build)
 ;;; my-project-build.el ends here

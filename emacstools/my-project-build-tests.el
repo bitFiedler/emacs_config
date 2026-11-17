@@ -94,4 +94,58 @@
       (when (buffer-live-p buffer) (kill-buffer buffer))
       (delete-directory root t))))
 
-(ert-run-tests-batch-and-exit)
+(ert-deftest my/build-output-follows-pauses-and-resumes-per-window ()
+  ;; Batch Emacs has no redisplay and reports stale window-end geometry.
+  ;; Exercise this test in an isolated terminal Emacs after its first redisplay.
+  (skip-unless (not noninteractive))
+  (save-window-excursion
+    (delete-other-windows)
+    (let ((buffer (generate-new-buffer " *build follow test*")) process)
+      (unwind-protect
+          (progn
+            (switch-to-buffer buffer)
+            (my/project-build-compilation-mode)
+            (should (eq compilation-scroll-output t))
+            (should-not compilation-auto-jump-to-first-error)
+            (let ((inhibit-read-only t))
+              (dotimes (line 150) (insert (format "line %d\n" line))))
+            (setq process (make-pipe-process :name "build-follow-test" :buffer buffer :noquery t))
+            (set-process-filter process #'compilation-filter)
+            (set-marker (process-mark process) (point-max))
+            (my/project-build--install-follow-filter process)
+            ;; Reinstall/reload must not wrap the filter recursively.
+            (my/project-build--setup-scrolling)
+            (should (eq (process-get process 'my/project-build-original-filter) #'compilation-filter))
+            (let ((live (selected-window)) (reader (split-window-below)))
+              (goto-char (point-max))
+              (recenter -1)
+              (set-window-start reader (point-min))
+              (set-window-point reader (point-min))
+              (redisplay t)
+              (let ((start (window-start reader)) (position (window-point reader)))
+                (my/project-build--follow-filter process "new output\n")
+                (should (= (window-point live) (point-max)))
+                (should (= (window-point reader) position))
+                (should (= (window-start reader) start)))
+              ;; A burst larger than the viewport followed immediately by a
+              ;; second chunk must not accidentally pause before redisplay.
+              (my/project-build--follow-filter process (make-string 200 ?\n))
+              (my/project-build--follow-filter process "burst tail\n")
+              (should (= (window-point live) (point-max)))
+              (should (= (window-point reader) (point-min)))
+              ;; Scrolling to the bottom should resume even with point on an
+              ;; earlier visible line; scrolling away again must pause again.
+              (set-window-start reader (save-excursion (goto-char (point-max)) (forward-line -3) (point)))
+              (set-window-point reader (window-start reader))
+              (redisplay t)
+              (should (< (window-point reader) (point-max)))
+              (my/project-build--follow-filter process "resumed output\n")
+              (should (= (window-point reader) (point-max)))
+              (set-window-start reader (point-min))
+              (set-window-point reader (point-min))
+              (my/project-build--follow-filter process "paused again\n")
+              (should (= (window-point reader) (point-min)))))
+        (when process (delete-process process))
+        (when (buffer-live-p buffer) (kill-buffer buffer))))))
+
+(when noninteractive (ert-run-tests-batch-and-exit))
