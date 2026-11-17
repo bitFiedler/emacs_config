@@ -259,6 +259,7 @@ This follows existing frame alpha; it does not change frame opacity."
 (load-file "~/emacstools/my-editing-line-numbers.el")
 (load-file "~/emacstools/my-buffer-navigation.el")
 (load-file "~/emacstools/my-buffer-reload.el")
+(load-file "~/emacstools/my-project-build.el")
 
 ;; ---------------------------------------------------------------------------
 ;; Drag Stuff

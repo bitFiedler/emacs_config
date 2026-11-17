@@ -2547,3 +2547,9 @@ Checks for this documentation cover source/module coverage, local links, table/f
 ## ASCII reference buffer protection
 
 `emacstools/my-ascii-table.el` is personal integration for the bundled legacy ASCII table library. C/C++ `F10` opens the hexadecimal reference. Decimal, octal and hexadecimal views default to values 0–255 (explicit limits are honored) and are read-only; `q` runs `quit-window` to return to editing. Reopening a table refreshes it normally. The wrapper uses a dedicated `special-mode` derivative and leaves the upstream library unchanged.
+
+## Project build task chooser (proof of concept)
+
+`emacstools/my-project-build.el` adds native and Docker project tasks through Helm and built-in compilation mode. `C-c B b` opens the chooser, `C-c B p` previews commands without running them, and `C-c B r` repeats the current project's last task. In the build buffer use `g` to repeat, `RET` on a diagnostic, or `M-g n` / `M-g p` to navigate errors. Existing `C-c b` remains Ediff and `C-<f5>` remains buffer reload.
+
+Configure named commands in project-local `my/project-build-tasks`. Native tasks need no extra dependency; Docker tasks use Python 3 and the Docker CLI, reusing exact image/checkout-mount discovery from `my-docker-clangd.py`. Diagnostic paths map back to the host only in the associated build buffer. No builds run automatically; scripts retain their existing cleanup/signing/packaging behavior. See [project build tasks](docs/project-build-tasks.md) for examples, settings, prerequisites, limitations and validation. Internal deployment settings remain in the personal documentation folder.

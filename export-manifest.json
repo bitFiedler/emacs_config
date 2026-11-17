@@ -3,7 +3,7 @@
     "source": ".emacs",
     "destination": ".emacs",
     "source_sha256": "a249f7104333cb11261e4c1fe86ad89f9ac7a13e5114d3a4b1dcc73fefe84533",
-    "export_sha256": "ffee867a98bd55afb44907439aa6e2312c90541c1196ebe549a83a21cd546d3b"
+    "export_sha256": "43f74ed0f03484c51989a6babfa181c75cbcd73a099fd263fd5f51fe9bf6e896"
   },
   {
     "source": ".emacs.d/custom.el",
