@@ -1,6 +1,6 @@
 # Project build tasks (proof of concept)
 
-`my-project-build.el` adds a Helm chooser on top of Emacs compilation mode. It supports native commands and commands in an already running Docker build container, without adding a new package dependency. Helm loads only when the chooser is opened; without Helm it uses ordinary completion. Eglot continues to provide language services independently.
+`my-project-build.el` adds a Helm chooser on top of Emacs compilation mode. It supports native commands and commands in a matching Docker build container, without adding a new package dependency. Helm loads only when the chooser is opened; without Helm it uses ordinary completion. Eglot continues to provide language services independently.
 
 ## Commands and keys
 
@@ -81,11 +81,19 @@ Add both `:docker-image` and `:container-root`:
           :container-root "/workspace"))))))
 ```
 
-Start the build container using the project's normal startup command. The Python runner reuses `my-docker-clangd.py` discovery: match the exact configured image and an exact bind mount of the current project root to the configured container root. Missing or multiple matching containers fail clearly. It does not choose an arbitrary container, start containers or pull images.
+The Python runner reuses `my-docker-clangd.py` discovery: match the exact configured image and an exact bind mount of the current project root to the configured container root. A matching running container is reused, including one started with the project's normal script. If none is running, the chooser now starts a background build container automatically. Multiple matches, Docker permission errors and daemon failures remain errors; they never trigger an additional container.
+
+Automatic startup is enabled by `my/project-build-auto-start-docker` (default `t`). Set it to nil globally or use `:docker-auto-start nil` on a particular task when its environment must be started manually. `:docker-auto-start t` explicitly enables startup for a task. Command previews never start/restart containers; the runner's `--print-command` also refuses to start one, even with `--auto-start`.
+
+The background container has a deterministic `emacs-build-...` name based on image, canonical host checkout, container mount and host UID. Repeated builds reuse it; a stopped container with that name is restarted only after validating its image and checkout mount. Docker's unique name prevents concurrent requests from creating duplicates. Unrelated stopped containers are left alone. Manual startup remains available for special environments.
+
+Managed startup uses the existing local image (`--pull=never`), the checkout bind mount and work directory, host UID/GID, read-only `/etc/passwd`, and writable `HOME=/tmp`. A small `/bin/sh` wait loop keeps it alive without an interactive terminal. It does not run the interactive project startup script, copy SSH keys, mount the Docker socket, enable privileged mode, inject host proxy settings or add pretty-shell/history customization. Use a manually started matching container when those project-specific extras are needed. The local image must already contain the toolchain; missing images are reported rather than downloaded. Automatic mount creation currently rejects commas in mount paths.
+
+These containers remain running after a build finishes or its buffer is killed, allowing subsequent builds and Eglot to reuse them. Stop a managed container explicitly with `docker stop NAME` when it is no longer needed; Eglot in that container will disconnect. Eglot itself still does not auto-start containers—run a build/tool-check task first or start one manually.
 
 The command runs with `docker exec --workdir ... CONTAINER sh -c COMMAND`, with no TTY or interactive input. Shell commands are intentional, reviewed project configuration; the outer invocation quotes each argument. Docker's exit status appears in the compilation buffer. Paths under the configured container mount translate to the host checkout for error navigation, including relative diagnostics following Make's entering-directory messages. Output text itself stays unchanged. Translation is local to these build buffers and survives `g`/repeat. Headers outside the mount need additional mappings and are outside this proof of concept.
 
-Requires Python 3, the Docker CLI, access to Docker, and a running image containing the build tools. `my/project-build-python` selects the Python executable. Install both Python helpers together; the repository installer includes them automatically. Native tasks do not need Python or Docker.
+Requires Python 3, the Docker CLI, access to Docker, and a locally installed image containing `/bin/sh`, `sleep` and the build tools. `my/project-build-python` selects the Python executable. Install both Python helpers together; the repository installer includes them automatically. Native tasks do not need Python or Docker.
 
 ## Limits and validation
 
@@ -100,3 +108,5 @@ Validation on 17 November 2026: 24 Python tests and five isolated ERT tests pass
 (progn (load-file "~/emacstools/my-project-build.el")
        (hack-local-variables))
 ```
+
+Automatic startup validation: 32 Python tests passed, including reuse, missing-container creation, matching stopped-container restart, conflict recovery, startup-error preservation and no startup on ambiguity/permission/daemon failures or previews. Seven non-rendering ERT tests passed; the existing rendering test is run separately in a terminal. A live isolated Docker test verified creation, repeat reuse, host UID, tool availability and restart of the same stopped container. Its temporary container was removed; user project containers were not stopped or altered. No firmware build was run. Reload the module and select a task afresh after upgrading; an old build buffer's `g` repeats its original saved command.

@@ -9,7 +9,8 @@
 (defcustom my/project-build-tasks nil
   "Project-local named build tasks.
 Each entry is (NAME :command SHELL-COMMAND :directory RELATIVE-DIRECTORY
-:docker-image IMAGE :container-root MOUNT).  Only :command is required.
+:docker-image IMAGE :container-root MOUNT :docker-auto-start BOOLEAN).
+Only :command is required.
 Omit Docker properties for a native task.  Directory defaults to the project
 root.  Commands are executable project configuration: review local-variable
 prompts before accepting them.  With nil, offer basic Make/CMake tasks."
@@ -23,6 +24,12 @@ use the project.el root.  This does not change Eglot's project selection."
   :type '(choice (const :tag "Use project.el" nil) directory)
   :group 'my/project-build)
 (put 'my/project-build-root 'risky-local-variable t)
+(defcustom my/project-build-auto-start-docker t
+  "Start a background build container if no matching container is running.
+Reuse matching running containers.  Restart this integration's own matching
+stopped container before creating a new one.  Previews never start containers.
+A task's :docker-auto-start property overrides this setting."
+  :type 'boolean :group 'my/project-build)
 (defcustom my/project-build-python "python3"
   "Python executable used for Docker task discovery and execution."
   :type 'string :group 'my/project-build)
@@ -81,10 +88,14 @@ use the project.el root.  This does not change Eglot's project selection."
         (user-error "Docker tasks require an image and a normalized absolute container root")))
     (if image
         (mapconcat #'shell-quote-argument
-                   (list my/project-build-python my/project-build--runner
-                         "--image" image "--host-root" (directory-file-name root)
-                         "--container-root" mount "--directory" directory
-                         "--command" command) " ")
+                   (append (list my/project-build-python my/project-build--runner
+                                 "--image" image "--host-root" (directory-file-name root)
+                                 "--container-root" mount "--directory" directory)
+                           (when (if (plist-member properties :docker-auto-start)
+                                     (plist-get properties :docker-auto-start)
+                                   my/project-build-auto-start-docker)
+                             (list "--auto-start"))
+                           (list "--command" command)) " ")
       command)))
 
 (defun my/project-build--map-file (filename)

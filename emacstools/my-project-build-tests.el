@@ -16,6 +16,18 @@
           (should-error (my/project-build--command root '("Bad" :command "make" :docker-image "image"))))
       (delete-directory root t))))
 
+(ert-deftest my/build-auto-start-default-and-task-override ()
+  (let* ((root (file-name-as-directory temporary-file-directory))
+         (task '("Docker" :command "make" :docker-image "image" :container-root "/project"))
+         (my/project-build-auto-start-docker t))
+    (should (string-match-p "--auto-start" (my/project-build--command root task)))
+    (should-not (string-match-p "--auto-start"
+                               (my/project-build--command root (append task '(:docker-auto-start nil)))))
+    (let ((my/project-build-auto-start-docker nil))
+      (should-not (string-match-p "--auto-start" (my/project-build--command root task)))
+      (should (string-match-p "--auto-start"
+                             (my/project-build--command root (append task '(:docker-auto-start t))))))))
+
 (ert-deftest my/build-root-can-override-a-source-submodule ()
   (let* ((parent (make-temp-file "build parent " t))
          (my/project-build-root parent)

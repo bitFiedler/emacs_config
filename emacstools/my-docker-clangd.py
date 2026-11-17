@@ -16,6 +16,11 @@ class LauncherError(Exception):
     pass
 
 
+class NoMatchingContainerError(LauncherError):
+    """No running image/mount match; distinct from Docker and ambiguity errors."""
+
+
+
 def docker_output(arguments):
     try:
         result = subprocess.run(['docker', *arguments], stdin=subprocess.DEVNULL,
@@ -40,7 +45,7 @@ def select_container(records, image, host_root, container_root):
                for mount in record['Mounts']):
             matches.append(record['Id'])
     if not matches:
-        raise LauncherError(f'No running container for {image} mounting {host_root} at {container_root}. Start the project build container first.')
+        raise NoMatchingContainerError(f'No running container for {image} mounting {host_root} at {container_root}. Start the project build container first.')
     if len(matches) != 1:
         raise LauncherError(f'{len(matches)} matching containers: {", ".join(matches)}. Stop duplicate project containers before starting Eglot.')
     return matches[0]
@@ -48,14 +53,17 @@ def select_container(records, image, host_root, container_root):
 
 def discover(image, host_root, container_root):
     identifiers = docker_output(['ps', '--filter', f'ancestor={image}', '--format', '{{.ID}}']).split()
-    records = []
-    if identifiers:
-        # Select only metadata required for matching; never fetch container environment/secrets.
-        template = ('{"Id":{{json .Id}},"Image":{{json .Config.Image}},'
-                    '"Running":{{json .State.Running}},"Mounts":{{json .Mounts}}}')
-        output = docker_output(['inspect', '--format', template, *identifiers])
-        records = [json.loads(line) for line in output.splitlines() if line.strip()]
-    return select_container(records, image, host_root, container_root)
+    return select_container(inspect_records(identifiers), image, host_root, container_root)
+
+
+def inspect_records(identifiers):
+    """Read only matching metadata, never container environment/secrets."""
+    if not identifiers:
+        return []
+    template = ('{"Id":{{json .Id}},"Image":{{json .Config.Image}},'
+                '"Running":{{json .State.Running}},"Mounts":{{json .Mounts}}}')
+    output = docker_output(['inspect', '--format', template, *identifiers])
+    return [json.loads(line) for line in output.splitlines() if line.strip()]
 
 
 def command(container, host_root, container_root, database, clangd, extra):
