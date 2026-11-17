@@ -96,4 +96,63 @@
     (should indent-tabs-mode)
     (should (= tab-width 8))))
 
+(ert-deftest my/shell-indent-detects-block-widths ()
+  (dolist (mode '(sh-mode bash-ts-mode))
+    (when (or (eq mode 'sh-mode) (treesit-language-available-p 'bash))
+      (dolist (width '(2 3 4 8))
+        (with-temp-buffer
+          (let ((pad (make-string width ?\s)))
+            (insert "if true; then\n" pad "echo one\n"
+                    pad "for item in a b; do\n" pad pad "echo two\n"
+                    pad "done\nfi\n"))
+          (funcall mode)
+          (should (= sh-basic-offset width))
+          (should (= tab-width width))
+          (should-not smie-config--buffer-local)
+          (indent-region (point-min) (point-max))
+          (goto-char (point-min)) (forward-line 3)
+          (should (= (current-indentation) (* 2 width))))))))
+
+(ert-deftest my/shell-indent-width-ignores-alignment-and-quoted-openers ()
+  (with-temp-buffer
+    (insert "echo \"then\"\n        echo aligned\n"
+            "value='\nif true; then\n        quoted\n'\n"
+            "# if true; then\n#         ignored\n"
+            "if true; then # real block\n\n  # comment\n  echo one\n"
+            "  echo command \\\n          argument\nfi\n"
+            "function example() {\n  echo two\n}\n")
+    (sh-mode)
+    (should (= sh-basic-offset 2))))
+
+(ert-deftest my/shell-indent-width-fallbacks ()
+  (dolist (text '("echo plain\n"
+                  "if true; then\necho broken\nfi\n"
+                  "if true; then\n\techo tabs\nfi\n"
+                  "if true; then\n  echo two\nelse\n    echo four\nfi\n"))
+    (with-temp-buffer
+      (insert text)
+      (let ((my/shell-indent-offset 4))
+        (sh-mode)
+        (should (= sh-basic-offset 4))))))
+
+(ert-deftest my/shell-indent-width-explicit-and-disabled ()
+  (with-temp-buffer
+    (insert "if true; then\n  echo two\nfi\n")
+    (sh-mode)
+    (should (= sh-basic-offset 2))
+    (let ((my/shell-indent-detect-width nil) (my/shell-indent-offset 6))
+      (my/shell-indent-apply)
+      (should (= sh-basic-offset 6)))
+    (setq-local file-local-variables-alist '((sh-basic-offset . 3)))
+    (setq-local sh-basic-offset 3)
+    (my/shell-indent-apply)
+    (should (= sh-basic-offset 3))
+    (should (= tab-width 3))
+    (setq-local file-local-variables-alist nil)
+    (setq-local dir-local-variables-alist '((sh-basic-offset . 8) (tab-width . 8)))
+    (setq-local sh-basic-offset 8 tab-width 8)
+    (my/shell-indent-apply)
+    (should (= sh-basic-offset 8))
+    (should (= tab-width 8))))
+
 (ert-run-tests-batch-and-exit)

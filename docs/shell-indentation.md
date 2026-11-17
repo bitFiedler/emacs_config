@@ -1,8 +1,12 @@
 # Shell indentation
 
-`my-shell-indentation.el` keeps shell indentation predictable in `sh-mode` and `bash-ts-mode`. The default step is four display columns (`my/shell-indent-offset`). `my/shell-indent-tabs` defaults to `detect`: use tabs or spaces according to the majority of indented code lines in the existing file. Leading whitespace containing a tab votes for tabs; spaces-only indentation votes for spaces. Blank lines, comments and multiline string content do not vote. Ties and files without indented code default to spaces. This is a whitespace-style heuristic, not a guess of contextual block indentation.
+`my-shell-indentation.el` keeps shell indentation predictable in `sh-mode` and `bash-ts-mode`. It detects both tabs versus spaces and the indentation step from existing code. The fallback is four display columns (`my/shell-indent-offset`).
 
-Set `my/shell-indent-tabs` to `t` to force tabs or nil to force spaces. Explicit file/directory-local `indent-tabs-mode`, `sh-basic-offset` and `tab-width` settings take precedence, including when reloading the module. Interactive `shell-mode` (a comint terminal buffer) is unchanged; classic shell-script editing uses `sh-mode`.
+`my/shell-indent-detect-width` defaults to `t`. Width detection counts positive steps of 1–8 columns between a space-indented block opener (`then`, `do`, `else` or `{`) and its first code line. It uses the most frequent step and ignores blank lines, comments, multiline strings and arbitrary continuation alignment. Tied or absent evidence falls back to `my/shell-indent-offset`; malformed zero-column bodies do not vote. This is a conservative heuristic, not a full inference of every shell layout. Tab-only indentation cannot reveal its intended display width, so it uses the fallback. Unless explicitly configured, `tab-width` follows the effective `sh-basic-offset`.
+
+`my/shell-indent-tabs` defaults to `detect`: use tabs or spaces according to the majority of indented code lines in the existing file. Leading whitespace containing a tab votes for tabs; spaces-only indentation votes for spaces. Blank lines, comments and multiline string content do not vote. Ties and files without indented code default to spaces.
+
+Set `my/shell-indent-tabs` to `t` to force tabs or nil to force spaces. Set `my/shell-indent-detect-width` to nil to always use `my/shell-indent-offset` instead of detecting a width. Explicit file/directory-local `indent-tabs-mode`, `sh-basic-offset` and `tab-width` settings take precedence, including when reloading the module. Interactive `shell-mode` (a comint terminal buffer) is unchanged; classic shell-script editing uses `sh-mode`.
 
 ## Why an if body could stay at column zero
 
@@ -20,10 +24,10 @@ Use `M-:`:
 (load-file "~/emacstools/my-shell-indentation.el")
 ```
 
-Then indent with `TAB` on a line, or `C-x h` followed by `C-M-\` for the whole buffer. Save after reviewing the indentation changes. The load itself does not reindent or save files. Change `my/shell-indent-offset` through Customize or Lisp and reload/apply `my/shell-indent-apply` to update an existing shell buffer.
+Then indent with `TAB` on a line, or `C-x h` followed by `C-M-\` for the whole buffer. Save after reviewing the indentation changes. The load itself does not reindent or save files. Configure `my/shell-indent-offset`, `my/shell-indent-detect-width` and `my/shell-indent-tabs` through Customize or Lisp and reload/apply `my/shell-indent-apply` to update an existing shell buffer. Detection runs on mode setup and targeted reload/apply; it does not reformat text automatically.
 
 These commands use Emacs indentation. `eglot-format` is a separate language-server formatting operation and may depend on an external formatter and its settings; this change does not claim to configure that operation.
 
 ## Validation
 
-Seven isolated ERT tests cover tab/space detection and emitted indentation in classic and tree-sitter Bash modes, ignored string/comment content, ties and explicit settings, unchanged interactive shell buffers, nested blocks, recovery after the real dtrt/SMIE guess, preservation of text/modified state during repair, and delegation for other modes. The reported file was also indented in memory with global dtrt-indent enabled: both affected lines received four spaces. No script was executed and the source file on disk was left untouched.
+Eleven isolated ERT tests cover detected 2-, 3-, 4- and 8-column steps and emitted nested indentation, width fallback for ties/zero-column bodies/tab-only files, disabled detection, local width overrides, alignment/quoted-opener exclusion, and tab/space detection and emitted indentation in classic and tree-sitter Bash modes, ignored string/comment content, ties and explicit settings, unchanged interactive shell buffers, nested blocks, recovery after the real dtrt/SMIE guess, preservation of text/modified state during repair, and delegation for other modes. The reported file was also indented in memory with global dtrt-indent enabled: both affected lines received four spaces. No script was executed and the source file on disk was left untouched.

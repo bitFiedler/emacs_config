@@ -89,7 +89,7 @@ These instructions apply to this repository. They record the owner's preferences
 
 ## Editing, search, preview and integrations
 
-- Shell-script modes (`sh-mode`, `bash-ts-mode`) should detect tabs versus spaces from existing code, honoring explicit local settings. Keep contextual SMIE indentation guessing disabled so malformed layout cannot teach zero-column block bodies. Do not apply this editing policy to interactive `shell-mode`.
+- Shell-script modes (`sh-mode`, `bash-ts-mode`) should detect tabs versus spaces and indentation width from existing code, honoring explicit local settings. Use a four-column fallback for ambiguous/missing width evidence; literal tabs cannot reveal their display width. Keep contextual SMIE indentation guessing disabled so malformed layout cannot teach zero-column block bodies. Do not apply this editing policy to interactive `shell-mode`.
 - Keep `C-<f5>` for reloading a buffer while preserving position where possible.
 - Pair deletion must work forward and backward, including when point is on the closing delimiter. Preserve C-S-d / M-S-d bindings and ordinary C-d / M-d behavior.
 - ASCII reference buffers show values **0–255**, are read-only, refresh normally, and use `q` to quit. Preserve the C/C++ F10 integration.
