@@ -969,6 +969,7 @@ but avoids huge-file slowdowns."
   :config
   ;; no messages
   (setq dtrt-indent-verbosity 0)
+  (load-file "~/emacstools/my-shell-indentation.el")
   (dtrt-indent-global-mode 1)
   )
 

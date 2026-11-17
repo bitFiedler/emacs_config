@@ -1066,7 +1066,7 @@ These are the **52 active `use-package` declarations** read from the main init a
 | `deadgrep` | Ripgrep content/project search (`M-s`) | `.emacs` |
 | `company` | Global completion after init | `.emacs` |
 | `ws-butler` | Local whitespace-on-save package | `.emacs` |
-| `dtrt-indent` | Global existing-indentation detection | `.emacs` |
+| `dtrt-indent` | Existing-indentation detection, with shell buffers excluded | `.emacs` |
 | `clean-aindent-mode` | Programming-mode indentation cleanup | `.emacs` |
 | `yaml-mode` | Classic YAML editing via a configured GitHub recipe | `.emacs` |
 | `vterm` | Local native terminal emulator | `.emacs` |
@@ -2557,3 +2557,7 @@ After selecting a task with `C-c B b`, use `C-c B r` from an editing buffer in t
 Build output follows automatically while its live end is visible. Scroll up to pause that window; scroll back to the bottom or press `M->` to resume. Split windows follow independently. Reloading the module updates running build buffers without restarting their builds.
 
 Configure named commands in project-local `my/project-build-tasks`. Optional `my/project-build-root` selects an existing absolute parent checkout when source files are in a Git submodule but build scripts and Docker mounts belong to its parent. This override applies only to build tasks. Native tasks need no extra dependency; Docker tasks use Python 3 and the Docker CLI, reusing exact image/checkout-mount discovery from `my-docker-clangd.py`. A matching running container is reused. With `my/project-build-auto-start-docker` (default `t`), no match starts a background container from the local image; its own stopped container is restarted after image/mount validation. Disable globally or per task with `:docker-auto-start nil` for special startup environments. Previews never start containers, and ambiguity/permission/daemon errors do not trigger startup. Managed containers keep running after builds for reuse by builds and Eglot; images are never pulled automatically. Eglot alone still requires a running container. Diagnostic paths map back to the host only in the associated build buffer. No builds run automatically; scripts retain their existing cleanup/signing/packaging behavior. See [project build tasks](docs/project-build-tasks.md) for examples, settings, prerequisites, limitations and validation. Internal deployment settings remain in the personal documentation folder.
+
+## Predictable shell indentation
+
+`emacstools/my-shell-indentation.el` prevents dtrt-indent/SMIE from learning incorrect indentation from existing shell layout. `sh-mode` and `bash-ts-mode` use normal shell indentation with `my/shell-indent-offset` (default 4) and spaces. Other modes retain indentation detection. Loading the module also clears prior buffer-local learned shell rules without changing buffer text or restarting Eglot. Use `M-: (load-file "~/emacstools/my-shell-indentation.el")`, then `TAB` or `C-x h` followed by `C-M-\` to indent. File/directory-local offsets may override the mode-hook defaults. See [shell indentation](docs/shell-indentation.md) for cause, scope, configuration and validation; `eglot-format` is a separate formatting path.
