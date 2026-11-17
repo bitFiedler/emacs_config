@@ -115,3 +115,5 @@ Open the chosen checkout's `src/main.c` in host Emacs. Accept the reviewed direc
 For native examples all paths are host paths. For Docker examples clangd uses container paths and the helper maps results back to the host. Exiting the `--rm` build shell stops/removes that container; Eglot must be reconnected after a replacement starts. Database and source outputs survive in the host bind mount.
 
 See [the general setup guide](../../eglot-c-cpp-build-setup.md) for upstream sources and troubleshooting. Native Make and CMake builds, executable exit status, two-source databases and clangd database discovery/parsing were verified in temporary directories. The Docker templates and commands are provided for running the same workflows inside the demo image; no image build or Docker navigation test is implied unless separately recorded.
+
+For a real upstream project, see [Linux kernel with and without Docker](../linux-kernel/README.md), including its separate kernel-development Dockerfile.

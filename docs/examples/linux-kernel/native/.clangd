@@ -1,0 +1,11 @@
+# clangd analysis compatibility for a GCC-built x86 Linux kernel.
+# This does not alter the real GCC/Kbuild flags.
+CompileFlags:
+  Remove:
+    - '-mpreferred-stack-boundary=*'
+    - '-mindirect-branch=*'
+    - '-mindirect-branch-register'
+    - '-fno-allow-store-data-races'
+    - '-fmin-function-alignment=*'
+    - '-fconserve-stack'
+    - '-mrecord-mcount'

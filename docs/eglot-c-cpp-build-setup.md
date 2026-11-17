@@ -79,6 +79,8 @@ Point clangd at the build directory using the launcher `--database` setting or p
 
 ## Linux kernel specifics
 
+See the [upstream Linux native/Docker walkthrough](examples/linux-kernel/README.md) for fresh public kernel checkouts, smaller/full Bear captures, Eglot configurations and the [kernel development Dockerfile](examples/linux-kernel/docker/Dockerfile).
+
 For an already configured upstream Linux checkout, capture its normal Make build:
 
 ```sh
