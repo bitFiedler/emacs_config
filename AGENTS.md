@@ -35,6 +35,7 @@ These instructions apply to this repository. They record the owner's preferences
 ## Documentation and validation
 
 - Update `readme.md` when changing behavior, shortcuts, options, dependencies or installation. It is the consolidated customization/module reference, based on `emacs-customizations-and-modules.md`.
+- Keep internal project deployment guides and examples outside this repository: use `~/Documents/codex/emacs/` for guides and `~/Documents/codex/emacs/docs/examples/<project-name>/` for examples. Use the actual project name (for example `usb-ibb-driver`), distinguishing it from container mount paths (such as `/usb-ibb`).
 - Maintain focused guides under `docs/` when their feature changes. The user's documentation folder is `~/Documents/codex/emacs`, not `~/.codex`; follow the backup rule for files outside Git.
 - Keep this preferences file aligned with explicit preference changes; detailed implementation and command inventories belong in the README/guides.
 - Test the behavior affected by a change. For installer/recovery changes, use `python3 -m unittest discover -s tests -v`. Emacs modules have their own ERT suites, normally run separately because some exit Emacs themselves.
